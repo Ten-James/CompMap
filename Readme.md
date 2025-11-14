@@ -125,3 +125,39 @@ services.AddTransient<IMapper, BaseMap>();
 Add Attributes to your DTO classes and then enjoy the generated mapping methods :)
 
 
+---
+
+## Continuous Integration (GitHub Actions)
+
+A workflow was added at `.github/workflows/ci.yml` to automate verification and publishing:
+
+- On pull requests (opened/synchronized/reopened):
+  - Restores, builds the solution and runs tests (if the `TenJames.CompMap.Tests` project exists).
+  - If the PR branch belongs to the same repository (not a fork), the workflow increments the patch version in `TenJames.CompMap/TenJames.CompMap/TenJames.CompMap.csproj` (e.g. 0.0.2 -> 0.0.3), commits the change and pushes it back to the PR branch, then adds a comment to the PR with the new version. This helps keep package versions unique for CI package artifacts.
+
+- On push of a tag matching `v*.*.*` (for example `v1.2.3`):
+  - The workflow builds the solution, packs `TenJames.CompMap` with the version taken from the tag (strips a leading `v` if present), and attempts to publish the resulting `.nupkg` to NuGet.org.
+  - Publishing runs only when a `NUGET_API_KEY` secret is set in the repository settings; otherwise the publish step is skipped.
+
+Notes and requirements:
+
+- Ensure the repository secret `NUGET_API_KEY` is set if you want automatic publishing to NuGet.org.
+- The PR auto-bump only runs when the PR head repo equals this repository (forked PRs are skipped to avoid push permission errors).
+- The workflow uses `dotnet 10.x` (actions/setup-dotnet@v3). Adjust the SDK version in the workflow if you need a different runtime.
+
+Quick commands (run locally) — fish shell:
+
+```fish
+# Build and test locally
+dotnet restore
+dotnet build TenJames.CompMap.sln -c Release
+dotnet test TenJames.CompMap/TenJames.CompMap.Tests -c Release
+
+# Create a tag and push (publish via CI)
+git tag v1.2.3
+git push origin v1.2.3
+```
+
+If you'd prefer bumping major/minor instead of patch in PRs, or if you want bumping to commit via a bot account or a separate branch/PR, I can adapt the workflow.
+
+---
