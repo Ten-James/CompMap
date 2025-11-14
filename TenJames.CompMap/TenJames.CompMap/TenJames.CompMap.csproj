@@ -14,7 +14,7 @@
     </PropertyGroup>
 
     <PropertyGroup>
-        <Version>0.0.6</Version>
+        <Version>0.0.7</Version>
         <Title>Compiletime Mapper</Title>
         <Description>Map your object on compile time</Description>
         <PackageProjectUrl>https://github.com/Ten-James/CompMap</PackageProjectUrl>
