@@ -1,0 +1,58 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netstandard2.0</TargetFramework>
+        <IsPackable>true</IsPackable>
+        <Nullable>enable</Nullable>
+        <LangVersion>latest</LangVersion>
+
+        <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+        <IsRoslynComponent>true</IsRoslynComponent>
+
+        <RootNamespace>TenJames.CompMap</RootNamespace>
+        <PackageId>TenJames.CompMap</PackageId>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <Version>0.0.1</Version>
+        <Title>Compiletime Mapper</Title>
+        <Description>Map your object on compile time</Description>
+        <PackageProjectUrl>https://github.com/Ten-James/CompMap</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/Ten-James/CompMap</RepositoryUrl>
+        <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+        <Authors>Jakub Indrák</Authors>
+        <PackageReadmeFile>readme.md</PackageReadmeFile>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <PackageLicenseUrl>https://github.com/Ten-James/CompMap/blob/master/LICENSE.md</PackageLicenseUrl>
+        <Copyright>MIT</Copyright>
+        <PackageTags>Generator Rosylyn DTO Mapper</PackageTags>
+        <!--<DevelopmentDependency>true</DevelopmentDependency> -->
+        <NoPackageAnalysis>false</NoPackageAnalysis>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <None Include="..\..\readme.md" Link="readme.md">
+            <PackagePath>\</PackagePath>
+            <Pack>true</Pack>
+        </None>
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Update="tools\*.ps1" CopyToOutputDirectory="PreserveNewest" Pack="true" PackagePath="" />
+    </ItemGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+        <DocumentationFile>bin\Release\DtoGenerator.xml</DocumentationFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.3.0"/>
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.3.0"/>
+    </ItemGroup>
+
+
+</Project>

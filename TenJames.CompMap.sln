@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TenJames.CompMap", "TenJames.CompMap\TenJames.CompMap\TenJames.CompMap.csproj", "{9B224A43-D90A-4D47-8A92-1E02A9BA5658}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TenJames.CompMap.Tests", "TenJames.CompMap\TenJames.CompMap.Tests\TenJames.CompMap.Tests.csproj", "{045DCA29-C2DC-4707-9521-98097B1B2F84}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TenJames.CompMap.Example", "TenJames.CompMap.Example\TenJames.CompMap.Example.csproj", "{B4418CCB-2984-4651-ABE3-E14B620171C3}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9B224A43-D90A-4D47-8A92-1E02A9BA5658}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9B224A43-D90A-4D47-8A92-1E02A9BA5658}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9B224A43-D90A-4D47-8A92-1E02A9BA5658}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9B224A43-D90A-4D47-8A92-1E02A9BA5658}.Release|Any CPU.Build.0 = Release|Any CPU
+		{045DCA29-C2DC-4707-9521-98097B1B2F84}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{045DCA29-C2DC-4707-9521-98097B1B2F84}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{045DCA29-C2DC-4707-9521-98097B1B2F84}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{045DCA29-C2DC-4707-9521-98097B1B2F84}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B4418CCB-2984-4651-ABE3-E14B620171C3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B4418CCB-2984-4651-ABE3-E14B620171C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B4418CCB-2984-4651-ABE3-E14B620171C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B4418CCB-2984-4651-ABE3-E14B620171C3}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
