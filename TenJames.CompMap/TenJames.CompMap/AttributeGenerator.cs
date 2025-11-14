@@ -5,14 +5,16 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace TenJames.CompMap;
 
+/// <inheritdoc />
 [Generator]
 public class AttributeGenerator: IIncrementalGenerator {
 
+    /// <inheritdoc />
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         RegisterAttributes(context);
     }
-    
+
     private void RegisterAttributes(IncrementalGeneratorInitializationContext context)
     {
         context.RegisterPostInitializationOutput(ctx =>
@@ -26,7 +28,7 @@ public class AttributeGenerator: IIncrementalGenerator {
             ctx.AddSource("Mapper.g.cs", GenerateMapperClass());
         });
     }
-    
+
     private static SourceText GenerateMapperClass()
     {
         var sourceText = SourceText.From(
@@ -36,50 +38,87 @@ public class AttributeGenerator: IIncrementalGenerator {
           using System;
           using System.Collections.Generic;
           using System.Reflection;
-          
+
           namespace TenJames.CompMap.Mappper;
-          
+
           /// <summary>
           /// Interface for mapping between types.
           /// </summary>
           public interface IMapper
           {
+              /// <summary>
+              /// Tries to map the source object to the destination type.
+              /// If the mapping is not defined, by default an exception is thrown.
+              /// </summary>
+              /// <param name="source">Source for the mapping</param>
+              /// <typeparam name="TDestination">Destination type for the map</typeparam>
+              /// <returns></returns>
               TDestination Map<TDestination>(object source);
           }
-          
-          
+
+
+          /// <summary>
+          /// Base implementation of IMapper
+          /// </summary>
           public class BaseMapper : IMapper {
-              
+
+              /// <summary>
+              /// Default implementation for null source
+              /// </summary>
+              /// <typeparam name="TDestination">Destination type</typeparam>
+              /// <returns></returns>
               protected virtual TDestination OnNull<TDestination>()
               {
                   return default(TDestination);
               }
-              
+
+              /// <summary>
+              /// Default implementation for mapping
+              /// </summary>
+              /// <param name="source">the source</param>
+              /// <param name="mapToMethod">Method on Source</param>
+              /// <param name="mapFromMethod">Method on destination</param>
+              /// <typeparam name="TDestination">Destination type</typeparam>
+              /// <returns></returns>
               protected virtual TDestination OnMap<TDestination>(object source, MethodInfo? mapToMethod, MethodInfo? mapFromMethod)
               {
                   if (mapToMethod != null && mapToMethod.ReturnType == typeof(TDestination))
                   {
                       return (TDestination)mapToMethod.Invoke(source, new object[] { this });
                   }
-          
+
                   // if TDestination has a static method MapFrom
                   if (mapFromMethod != null)
                   {
                       return (TDestination)mapFromMethod.Invoke(null, new object[] { this, source });
                   }
-                  
+
                   return OnError<TDestination>(source, new NotImplementedException($"No mapping defined from {source.GetType().FullName} to {typeof(TDestination).FullName}"));
               }
-              
+
+              /// <summary>
+              /// An error occurred during mapping
+              /// </summary>
+              /// <param name="source"></param>
+              /// <param name="ex"></param>
+              /// <typeparam name="TDestination">Destination type</typeparam>
+              /// <returns>By default, it always throw</returns>
+              /// <exception cref="Exception">By default, it throws an error</exception>
               protected virtual TDestination OnError<TDestination>(object source, Exception ex)
               {
                   throw ex;
               }
-          
+
+              /// <summary>
+              /// What should happen when source is enumerable
+              /// </summary>
+              /// <param name="source"></param>
+              /// <typeparam name="TDestination">Destination type</typeparam>
+              /// <returns>How should collection be mapped</returns>
               protected virtual TDestination OnEnumerable<TDestination>(object source)
               {
                   var enumerable = (System.Collections.IEnumerable)source;
-                  
+
                   if (typeof(TDestination).IsArray)
                   {
                       var elementType = typeof(TDestination).GetElementType();
@@ -96,7 +135,7 @@ public class AttributeGenerator: IIncrementalGenerator {
                   }
                   if (typeof(TDestination).IsGenericType && ( typeof(TDestination).GetGenericTypeDefinition() == typeof(List<>) ||
                                                               typeof(TDestination).GetGenericTypeDefinition() == typeof(IEnumerable<>)  ||
-                                                              typeof(TDestination).GetGenericTypeDefinition() == typeof(ICollection<>)  || 
+                                                              typeof(TDestination).GetGenericTypeDefinition() == typeof(ICollection<>)  ||
                                                               false
                       ))
                   {
@@ -114,32 +153,30 @@ public class AttributeGenerator: IIncrementalGenerator {
                       return OnError<TDestination>(source, new NotImplementedException($"Mapping to collection type {typeof(TDestination).FullName} is not supported."));
                   }
               }
-              
-              
+
+
+              /// <inheritdoc />
               public virtual TDestination Map<TDestination>(object source)
               {
-                  if (source == null)
+                  switch (source)
                   {
-                      return OnNull<TDestination>();
+                      case null:
+                          return OnNull<TDestination>();
+
+                      // if source is iEnumerable
+                      case System.Collections.IEnumerable enumerable:
+                          return OnEnumerable<TDestination>(source);
                   }
-                  
-                  
-                  // if source is iEnumerable
-                  if (source is System.Collections.IEnumerable enumerable)
-                  {
-                      return OnEnumerable<TDestination>(source);
-                  }
-          
-          
+
+
                   // if source has a mapping method to TDestination, use it
                   var mapMethod = source.GetType().GetMethod("MapTo", new Type[] { typeof(IMapper) });
                   var mapFromMethod = typeof(TDestination).GetMethod("MapFrom", new Type[] { typeof(IMapper), source.GetType() });
-                  
+
                   return OnMap<TDestination>(source, mapMethod, mapFromMethod);
               }
           }
-          
-           
+
           """, Encoding.UTF8);
         return sourceText;
     }
@@ -167,7 +204,7 @@ public class AttributeGenerator: IIncrementalGenerator {
             var arg = attribute.Arguments[i];
             var comma = i < attribute.Arguments.Count - 1 ? "," : "";
         }
-        
+
         src.AppendLine("     ): Attribute{");
         src.AppendLine("    }");
         src.AppendLine("}");

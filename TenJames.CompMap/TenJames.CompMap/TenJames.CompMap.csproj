@@ -14,7 +14,7 @@
     </PropertyGroup>
 
     <PropertyGroup>
-        <Version>0.0.1</Version>
+        <Version>0.0.2</Version>
         <Title>Compiletime Mapper</Title>
         <Description>Map your object on compile time</Description>
         <PackageProjectUrl>https://github.com/Ten-James/CompMap</PackageProjectUrl>
@@ -23,7 +23,7 @@
         <Authors>Jakub Indrák</Authors>
         <PackageReadmeFile>readme.md</PackageReadmeFile>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <PackageLicenseUrl>https://github.com/Ten-James/CompMap/blob/master/LICENSE.md</PackageLicenseUrl>
+        <PackageLicenseUrl>https://github.com/Ten-James/CompMap/blob/main/Readme.md</PackageLicenseUrl>
         <Copyright>MIT</Copyright>
         <PackageTags>Generator Rosylyn DTO Mapper</PackageTags>
         <!--<DevelopmentDependency>true</DevelopmentDependency> -->
