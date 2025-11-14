@@ -165,30 +165,6 @@ jobs:
             echo "CSProj already matches tag version"
           fi
 
-      - name: Create Pull Request for version update
-        uses: actions/github-script@v7
-        env:
-          VERSION: ${{ steps.vars.outputs.version }}
-          TAG: ${{ steps.vars.outputs.tag }}
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const headBranch = `ci/bump-version-${process.env.VERSION}`;
-            const base = `${{ github.event.repository.default_branch }}`;
-            const owner = context.repo.owner;
-            const repo = context.repo.repo;
-            const title = `chore: set package version to ${process.env.VERSION} (tag ${process.env.TAG})`;
-            const body = `This PR updates TenJames.CompMap.csproj version to ${process.env.VERSION} (created by release workflow for tag ${process.env.TAG}).`;
-
-            // Check for existing open PR from the same head
-            const existing = await github.pulls.list({ owner, repo, head: `${owner}:${headBranch}`, state: 'open' });
-            if (existing.data && existing.data.length > 0) {
-              console.log(`Found existing PR: ${existing.data[0].html_url}`);
-            } else {
-              const pr = await github.pulls.create({ owner, repo, title, head: headBranch, base, body });
-              console.log(`Created PR: ${pr.data.html_url}`);
-            }
-
       - name: Pack
         run: |
           dotnet pack TenJames.CompMap/TenJames.CompMap/TenJames.CompMap.csproj -c Release -o ./nupkgs /p:PackageVersion=${{ steps.vars.outputs.version }}
