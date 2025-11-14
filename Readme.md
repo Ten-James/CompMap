@@ -40,7 +40,7 @@ partial class UserReadDto
         return new UserReadDto
         {
             Id = source.Id,
-a            Name = source.Name,
+            Name = source.Name,
             Guid = source.Guid,
             Documents = mapper.Map<ICollection<DocumentDto> >(source.Documents),
             Title = unmapped.Title,
