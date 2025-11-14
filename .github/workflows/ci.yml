@@ -167,6 +167,7 @@ jobs:
 
       - name: Pack
         run: |
+          dotnet build TenJames.CompMap/TenJames.CompMap/TenJames.CompMap.csproj -c Release
           dotnet pack TenJames.CompMap/TenJames.CompMap/TenJames.CompMap.csproj -c Release -o ./nupkgs /p:PackageVersion=${{ steps.vars.outputs.version }}
 
       - name: Find generated nupkg
