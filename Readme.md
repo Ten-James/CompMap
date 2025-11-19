@@ -130,7 +130,7 @@ Add Attributes to your DTO classes and then enjoy the generated mapping methods 
 ## Example
 
 
-See the [Example](./TenJames.CompMap.Example) project for a complete working example.
+See the [Example](./TenJames.CompMap/TenJames.CompMap.Example) project for a complete working example.
 
 
 ## Contributing
