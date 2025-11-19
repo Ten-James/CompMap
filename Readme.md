@@ -127,26 +127,14 @@ Add Attributes to your DTO classes and then enjoy the generated mapping methods 
 
 ---
 
-## Continuous Integration (GitHub Actions)
+## Example
 
-A workflow was added at `.github/workflows/ci.yml` to automate verification and publishing:
 
-- On pull requests (opened/synchronized/reopened):
-  - Restores, builds the solution and runs tests (if the `TenJames.CompMap.Tests` project exists).
+See the [Example](./TenJames.CompMap.Example) project for a complete working example.
 
-Quick commands (run locally) — fish shell:
 
-```fish
-# Build and test locally
-dotnet restore
-dotnet build TenJames.CompMap.sln -c Release
-dotnet test TenJames.CompMap/TenJames.CompMap.Tests -c Release
+## Contributing
 
-# Create a tag and push (publish via CI)
-git tag v1.2.3
-git push origin v1.2.3
-```
+Contributions are welcome! Please fork the repository and submit a pull request with your changes.
 
-If you'd prefer bumping major/minor instead of patch in PRs, or if you want bumping to commit via a bot account or a separate branch/PR, I can adapt the workflow.
-
----
+see [CONTRIBUTING.md](CONTRIBUTING.md) for details.
