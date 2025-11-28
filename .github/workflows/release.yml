@@ -1,0 +1,206 @@
+name: Release
+
+permissions:
+  contents: write
+  packages: write
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_bump:
+        description: 'Version bump type'
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      prerelease:
+        description: 'Is this a prerelease?'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  bump-and-tag:
+    name: Bump Version and Create Tag
+    runs-on: ubuntu-latest
+    outputs:
+      new_version: ${{ steps.bump.outputs.new_version }}
+      new_tag: ${{ steps.bump.outputs.new_tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump version in csproj
+        id: bump
+        run: |
+          set -e
+          csproj="TenJames.CompMap/TenJames.CompMap/TenJames.CompMap.csproj"
+
+          if [ ! -f "$csproj" ]; then
+            echo "CSProj not found: $csproj"
+            exit 1
+          fi
+
+          # Extract current version
+          current_version=$(grep -oPm1 "(?<=<Version>)[^<]+" "$csproj" || true)
+          if [ -z "$current_version" ]; then
+            echo "No <Version> found in $csproj"
+            exit 1
+          fi
+
+          echo "Current version: $current_version"
+
+          # Parse version
+          IFS='.' read -r major minor patch <<< "$current_version"
+
+          # Bump version based on input
+          case "${{ github.event.inputs.version_bump }}" in
+            major)
+              major=$((major + 1))
+              minor=0
+              patch=0
+              ;;
+            minor)
+              minor=$((minor + 1))
+              patch=0
+              ;;
+            patch)
+              patch=$((patch + 1))
+              ;;
+          esac
+
+          new_version="${major}.${minor}.${patch}"
+          new_tag="v${new_version}"
+
+          echo "New version: $new_version"
+          echo "New tag: $new_tag"
+
+          # Update csproj
+          sed -i "s|<Version>${current_version}</Version>|<Version>${new_version}</Version>|" "$csproj"
+
+          # Commit and tag
+          git add "$csproj"
+          git commit -m "chore: bump version to ${new_version}"
+          git tag -a "$new_tag" -m "Release ${new_tag}"
+
+          # Push changes and tag
+          git push origin main
+          git push origin "$new_tag"
+
+          # Set outputs
+          echo "new_version=${new_version}" >> $GITHUB_OUTPUT
+          echo "new_tag=${new_tag}" >> $GITHUB_OUTPUT
+
+  build-and-release:
+    name: Build, Pack and Release
+    needs: bump-and-tag
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.bump-and-tag.outputs.new_tag }}
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build TenJames.CompMap.sln -c Release --no-restore
+
+      - name: Test
+        run: dotnet test TenJames.CompMap.sln -c Release --no-build --verbosity normal
+
+      - name: Pack NuGet package
+        run: |
+          dotnet pack TenJames.CompMap/TenJames.CompMap/TenJames.CompMap.csproj \
+            -c Release \
+            -o ./artifacts \
+            --no-build \
+            /p:PackageVersion=${{ needs.bump-and-tag.outputs.new_version }}
+
+      - name: Publish to NuGet
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          if [ -z "$NUGET_API_KEY" ]; then
+            echo "⚠️  NUGET_API_KEY not set - skipping NuGet publish"
+          else
+            echo "📦 Publishing to NuGet..."
+            dotnet nuget push ./artifacts/*.nupkg \
+              --api-key "$NUGET_API_KEY" \
+              --source https://api.nuget.org/v3/index.json \
+              --skip-duplicate
+            echo "✅ Published to NuGet"
+          fi
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          # Get the previous tag
+          previous_tag=$(git describe --tags --abbrev=0 ${{ needs.bump-and-tag.outputs.new_tag }}^ 2>/dev/null || echo "")
+
+          if [ -z "$previous_tag" ]; then
+            echo "First release"
+            notes="## What's New\n\nFirst release of TenJames.CompMap! 🎉"
+          else
+            echo "Previous tag: $previous_tag"
+            # Generate changelog between tags
+            notes="## What's Changed\n\n"
+            notes+="$(git log ${previous_tag}..${{ needs.bump-and-tag.outputs.new_tag }} --pretty=format:'- %s (%h)' --reverse)"
+          fi
+
+          # Add installation instructions
+          notes+="\n\n## Installation\n\n\`\`\`bash\ndotnet add package TenJames.CompMap --version ${{ needs.bump-and-tag.outputs.new_version }}\n\`\`\`"
+
+          # Save to file for the release
+          echo -e "$notes" > release_notes.md
+          cat release_notes.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.bump-and-tag.outputs.new_tag }}
+          name: Release ${{ needs.bump-and-tag.outputs.new_tag }}
+          body_path: release_notes.md
+          draft: false
+          prerelease: ${{ github.event.inputs.prerelease }}
+          files: |
+            ./artifacts/*.nupkg
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Summary
+        run: |
+          echo "## 🚀 Release Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version:** ${{ needs.bump-and-tag.outputs.new_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Tag:** ${{ needs.bump-and-tag.outputs.new_tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Prerelease:** ${{ github.event.inputs.prerelease }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📦 Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          ls -lh ./artifacts/ >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -n "$NUGET_API_KEY" ]; then
+            echo "✅ Published to NuGet: https://www.nuget.org/packages/TenJames.CompMap/${{ needs.bump-and-tag.outputs.new_version }}" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️  NuGet publish skipped (NUGET_API_KEY not configured)" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🔗 [View Release](https://github.com/${{ github.repository }}/releases/tag/${{ needs.bump-and-tag.outputs.new_tag }})" >> $GITHUB_STEP_SUMMARY

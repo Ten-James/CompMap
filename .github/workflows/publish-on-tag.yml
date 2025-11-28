@@ -1,0 +1,135 @@
+name: Publish on Tag
+
+permissions:
+  contents: write
+  packages: write
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  publish:
+    name: Build, Pack and Publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          VERSION=${TAG#v}
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "Tag: $TAG"
+          echo "Version: $VERSION"
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build TenJames.CompMap.sln -c Release --no-restore
+
+      - name: Test
+        run: dotnet test TenJames.CompMap.sln -c Release --no-build --verbosity normal
+
+      - name: Update csproj version to match tag
+        run: |
+          csproj="TenJames.CompMap/TenJames.CompMap/TenJames.CompMap.csproj"
+          current_version=$(grep -oPm1 "(?<=<Version>)[^<]+" "$csproj" || true)
+
+          echo "Current csproj version: ${current_version}"
+          echo "Tag version: ${{ steps.version.outputs.version }}"
+
+          if [ "${current_version}" != "${{ steps.version.outputs.version }}" ]; then
+            echo "⚠️  Warning: csproj version (${current_version}) doesn't match tag (${{ steps.version.outputs.version }})"
+            echo "Using tag version for packaging..."
+          fi
+
+      - name: Pack NuGet package
+        run: |
+          dotnet pack TenJames.CompMap/TenJames.CompMap/TenJames.CompMap.csproj \
+            -c Release \
+            -o ./artifacts \
+            --no-build \
+            /p:PackageVersion=${{ steps.version.outputs.version }}
+
+      - name: Publish to NuGet
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          if [ -z "$NUGET_API_KEY" ]; then
+            echo "⚠️  NUGET_API_KEY not set - skipping NuGet publish"
+          else
+            echo "📦 Publishing to NuGet..."
+            dotnet nuget push ./artifacts/*.nupkg \
+              --api-key "$NUGET_API_KEY" \
+              --source https://api.nuget.org/v3/index.json \
+              --skip-duplicate
+            echo "✅ Published to NuGet"
+          fi
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          # Get the previous tag
+          previous_tag=$(git describe --tags --abbrev=0 ${{ steps.version.outputs.tag }}^ 2>/dev/null || echo "")
+
+          if [ -z "$previous_tag" ]; then
+            echo "First release"
+            notes="## What's New\n\nFirst release of TenJames.CompMap! 🎉"
+          else
+            echo "Previous tag: $previous_tag"
+            # Generate changelog between tags
+            notes="## What's Changed\n\n"
+            notes+="$(git log ${previous_tag}..${{ steps.version.outputs.tag }} --pretty=format:'- %s (%h)' --reverse)"
+          fi
+
+          # Add installation instructions
+          notes+="\n\n## Installation\n\n\`\`\`bash\ndotnet add package TenJames.CompMap --version ${{ steps.version.outputs.version }}\n\`\`\`"
+
+          # Save to file
+          echo -e "$notes" > release_notes.md
+          cat release_notes.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: Release ${{ steps.version.outputs.tag }}
+          body_path: release_notes.md
+          draft: false
+          prerelease: false
+          files: |
+            ./artifacts/*.nupkg
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Summary
+        run: |
+          echo "## 🚀 Release Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version:** ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Tag:** ${{ steps.version.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📦 Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          ls -lh ./artifacts/ >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -n "$NUGET_API_KEY" ]; then
+            echo "✅ Published to NuGet: https://www.nuget.org/packages/TenJames.CompMap/${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️  NuGet publish skipped (NUGET_API_KEY not configured)" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🔗 [View Release](https://github.com/${{ github.repository }}/releases/tag/${{ steps.version.outputs.tag }})" >> $GITHUB_STEP_SUMMARY
