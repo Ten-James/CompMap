@@ -32,13 +32,8 @@ jobs:
       - name: Build
         run: dotnet build TenJames.CompMap.sln -c Release --no-restore
 
-      - name: Test (if present)
-        run: |
-          if [ -d "TenJames.CompMap/TenJames.CompMap.Tests" ]; then
-            dotnet test TenJames.CompMap/TenJames.CompMap.Tests -c Release --no-build --verbosity normal
-          else
-            echo "No tests found"
-          fi
+      - name: Test
+        run: dotnet test TenJames.CompMap.sln -c Release --no-build --verbosity normal
 
   bump-version:
     name: Bump package version (patch) on PR
