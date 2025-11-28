@@ -96,16 +96,19 @@ Install the **TenJames.CompMap** package via NuGet:
 ```shell
 dotnet add package TenJames.CompMap
 ```
-Ensure its correclty referenced in your project file:
+
+The package will automatically be configured as a source generator. If you need to reference it manually in your project file:
 
 ```xml
-<ProjectReference 
-    Include="TenJames.CompMap" 
-    Version="0.0.2" 
-    ReferenceOutputAssembly="false" 
-    OutputItemType="Analyzer" 
+<PackageReference
+    Include="TenJames.CompMap"
+    Version="latest_version"
+    OutputItemType="Analyzer"
+    ReferenceOutputAssembly="false"
 />
 ```
+
+Note: The `OutputItemType="Analyzer"` and `ReferenceOutputAssembly="false"` attributes are typically not required when using `dotnet add package`, as the package is already configured correctly.
 
 ### Component registration
 
