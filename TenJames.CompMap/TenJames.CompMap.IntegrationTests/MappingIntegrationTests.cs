@@ -397,4 +397,72 @@ public class MappingIntegrationTests
         Assert.Equal(0, dto.ReviewCount);
         Assert.Equal(0.0, dto.AverageRating);
     }
+
+    [Fact]
+    public void VehicleReadDto_MapFrom_ShouldMapPropertiesFromBaseClass()
+    {
+        // Arrange
+        var vehicle = new Vehicle
+        {
+            // Properties from BaseEntity
+            Id = 1,
+            CreatedAt = new DateTime(2024, 1, 1),
+            UpdatedAt = new DateTime(2024, 1, 15),
+            IsDeleted = false,
+            // Properties from Vehicle
+            Make = "Toyota",
+            Model = "Camry",
+            Year = 2024,
+            Color = "Blue"
+        };
+
+        // Act
+        var dto = VehicleReadDto.MapFrom(_mapper, vehicle);
+
+        // Assert - Properties from base class BaseDto
+        Assert.Equal(vehicle.Id, dto.Id);
+        Assert.Equal(vehicle.CreatedAt, dto.CreatedAt);
+        Assert.Equal(vehicle.UpdatedAt, dto.UpdatedAt);
+
+        // Assert - Properties from VehicleReadDto
+        Assert.Equal(vehicle.Make, dto.Make);
+        Assert.Equal(vehicle.Model, dto.Model);
+        Assert.Equal(vehicle.Year, dto.Year);
+        Assert.Equal(vehicle.Color, dto.Color);
+    }
+
+    [Fact]
+    public void VehicleCreateDto_MapTo_ShouldMapPropertiesFromBaseClass()
+    {
+        // Arrange
+        var dto = new VehicleCreateDto
+        {
+            // Properties from BaseDto
+            Id = 2,
+            CreatedAt = new DateTime(2024, 2, 1),
+            UpdatedAt = new DateTime(2024, 2, 10),
+            // Properties from VehicleCreateDto
+            Make = "Honda",
+            Model = "Accord",
+            Year = 2023,
+            Color = "Red"
+        };
+
+        // Act
+        var vehicle = _mapper.Map<Vehicle>(dto);
+
+        // Assert - Properties from base class BaseEntity
+        Assert.Equal(dto.Id, vehicle.Id);
+        Assert.Equal(dto.CreatedAt, vehicle.CreatedAt);
+        Assert.Equal(dto.UpdatedAt, vehicle.UpdatedAt);
+
+        // Assert - Properties from Vehicle
+        Assert.Equal(dto.Make, vehicle.Make);
+        Assert.Equal(dto.Model, vehicle.Model);
+        Assert.Equal(dto.Year, vehicle.Year);
+        Assert.Equal(dto.Color, vehicle.Color);
+
+        // Assert - Unmapped property
+        Assert.False(vehicle.IsDeleted);
+    }
 }

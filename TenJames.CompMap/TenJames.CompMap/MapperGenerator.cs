@@ -57,33 +57,43 @@ public class MapperGenerator : IIncrementalGenerator {
 
             var sourceText = new SourceBuilder();
             sourceText.AppendLine($"using {Consts.MapperNamespace};");
+
+            // Add using for target namespace if different from current namespace
+            if (ma.TargetNamespace != ma.Namespace && ma.TargetNamespace != "GlobalNamespace")
+            {
+                sourceText.AppendLine($"using {ma.TargetNamespace};");
+            }
+
             sourceText.AppendLine();
             sourceText.AppendLine($"namespace {ma.Namespace};");
             sourceText.AppendLine();
             sourceText.AppendLine($"partial class {className}");
             sourceText.AppendLine("{");
             sourceText.IncreaseIndent();
-            var matchingFields = ma.ClassDeclarationSyntax.Members
-                .OfType<PropertyDeclarationSyntax>()
-                .Where(prop => ma.Target != null
-                               && ma.Target.Members
-                                   .OfType<PropertyDeclarationSyntax>()
-                                   .Any(targetProp => targetProp.Identifier.Text == prop.Identifier.Text))
+
+            // Get all properties including inherited ones
+            var allSourceProperties = MappingOptions.GetAllProperties(ma.SemanticModel, ma.ClassDeclarationSyntax);
+
+            // Get semantic model for target (which might be in a different file)
+            var targetSemanticModel = compilation.GetSemanticModel(ma.Target.SyntaxTree);
+            var allTargetProperties = MappingOptions.GetAllProperties(targetSemanticModel, ma.Target);
+
+            var matchingFields = allSourceProperties
+                .Where(prop => allTargetProperties
+                    .Any(targetProp => targetProp.Name == prop.Name))
                 .ToList();
             
-            
+
             if (ma.AttributeName.Contains("MapFrom"))
             {
-                var missingFields = ma.ClassDeclarationSyntax.Members
-                    .OfType<PropertyDeclarationSyntax>()
-                    .Where(prop => ma.Target != null
-                                   && ma.Target.Members.OfType<PropertyDeclarationSyntax>().All(targetProp => targetProp.Identifier.Text != prop.Identifier.Text))
+                var missingFields = allSourceProperties
+                    .Where(prop => allTargetProperties.All(targetProp => targetProp.Name != prop.Name))
                     .ToList();
 
                 var isMissing = missingFields.Any();
                 if (isMissing)
                 {
-                    // create a subclass inside 
+                    // create a subclass inside
                     sourceText.AppendLine();
                     sourceText.AppendLine("///<summary>");
                     sourceText.AppendLine("/// The following properties were not mapped because they do not exist in the target class");
@@ -92,17 +102,15 @@ public class MapperGenerator : IIncrementalGenerator {
                         using var block = sourceText.BeginBlock($"internal class {ma.TargetName}UnmappedProperties");
                         foreach (var prop in missingFields)
                         {
-                            var location = prop.GetLocation().GetMappedLineSpan();
+                            // Add property documentation
                             sourceText.AppendLine($"/// <summary>");
-                            sourceText.AppendLine($"/// Found at {location.Path.Substring(location.Path.LastIndexOf('/'))} at {location.StartLinePosition.Line + 1}");
+                            sourceText.AppendLine($"/// Property: {prop.Name} of type {prop.TypeFullName.Replace("global::", "")}");
                             sourceText.AppendLine($"/// </summary>");
-                            sourceText.AppendLine($"public {
-                                string.Join("",prop.Modifiers.Where(x => !x.ToFullString().Contains("public")).Select(x => x.ToFullString()))
-                            }{prop.Type.ToFullString().Trim()} {prop.Identifier.Text} {{ get; set; }}");
+                            sourceText.AppendLine($"public {prop.TypeFullName.Replace("global::", "")} {prop.Name} {{ get; set; }}");
                         }
                     }
                     sourceText.AppendLine();
-                    sourceText.AppendLine($"private static partial {ma.TargetName}UnmappedProperties Get{ma.TargetName}UnmappedProperties(IMapper mapper,  {ma.Target.Identifier.Text} source);");
+                    sourceText.AppendLine($"private static partial {ma.TargetName}UnmappedProperties Get{ma.TargetName}UnmappedProperties(IMapper mapper,  {ma.TargetFullName} source);");
 
                 }
                 sourceText.AppendLine();
@@ -111,7 +119,7 @@ public class MapperGenerator : IIncrementalGenerator {
                     sourceText.AppendLine("/// <summary>");
                     sourceText.AppendLine("/// Mapping method generated by TenJames.CompMap");
                     sourceText.AppendLine("/// </summary>");
-                    using var mapFromBlock = sourceText.BeginBlock($"public static {className} MapFrom(IMapper mapper, {ma.Target?.Identifier.Text} source)");
+                    using var mapFromBlock = sourceText.BeginBlock($"public static {className} MapFrom(IMapper mapper, {ma.TargetFullName} source)");
 
                     if (isMissing)
                     {
@@ -124,23 +132,23 @@ public class MapperGenerator : IIncrementalGenerator {
                     sourceText.IncreaseIndent();
                     foreach (var prop in matchingFields)
                     {
-                        if (prop.Type.ToFullString() != ma.Target?.Members
-                                .OfType<PropertyDeclarationSyntax>()
-                                .FirstOrDefault(p => p.Identifier.Text == prop.Identifier.Text)?
-                                .Type.ToFullString())
+                        var targetProp = allTargetProperties
+                            .FirstOrDefault(p => p.Name == prop.Name);
+
+                        if (targetProp != null && prop.TypeFullName != targetProp.TypeFullName)
                         {
                             // Type mismatch, use mapper
-                            sourceText.AppendLine($"{prop.Identifier.Text} = mapper.Map<{prop.Type.ToFullString()}>(source.{prop.Identifier.Text}),");
+                            sourceText.AppendLine($"{prop.Name} = mapper.Map<{prop.TypeFullName.Replace("global::", "")}>(source.{prop.Name}),");
                         }
                         else
                         {
-                            sourceText.AppendLine($"{prop.Identifier.Text} = source.{prop.Identifier.Text},");
+                            sourceText.AppendLine($"{prop.Name} = source.{prop.Name},");
                         }
                     }
-                
+
                     foreach (var prop in missingFields)
                     {
-                        sourceText.AppendLine($"{prop.Identifier.Text} = unmapped.{prop.Identifier.Text},");
+                        sourceText.AppendLine($"{prop.Name} = unmapped.{prop.Name},");
                     }
                     sourceText.DecreaseIndent();
                     sourceText.AppendLine("};");
@@ -149,15 +157,14 @@ public class MapperGenerator : IIncrementalGenerator {
             }
             else if (ma.AttributeName.Contains("MapTo"))
             {
-                var missingFields = ma.Target.Members
-                    .OfType<PropertyDeclarationSyntax>()
-                    .Where(prop => ma.ClassDeclarationSyntax.Members.OfType<PropertyDeclarationSyntax>().All(targetProp => targetProp.Identifier.Text != prop.Identifier.Text))
+                var missingFields = allTargetProperties
+                    .Where(prop => allSourceProperties.All(targetProp => targetProp.Name != prop.Name))
                     .ToList();
-                
+
                 var isMissing = missingFields.Any();
                 if (isMissing)
                 {
-                    // create a subclass inside 
+                    // create a subclass inside
                     sourceText.AppendLine();
                     sourceText.AppendLine("///<summary>");
                     sourceText.AppendLine("/// The following properties were not mapped because they do not exist in the target class");
@@ -166,13 +173,11 @@ public class MapperGenerator : IIncrementalGenerator {
                         using var block = sourceText.BeginBlock($"internal class {ma.TargetName}UnmappedProperties");
                         foreach (var prop in missingFields)
                         {
-                            var location = prop.GetLocation().GetMappedLineSpan();
+                            // Add property documentation
                             sourceText.AppendLine($"/// <summary>");
-                            sourceText.AppendLine($"/// Found at {location.Path.Substring(location.Path.LastIndexOf('/'))} at {location.StartLinePosition.Line + 1}");
+                            sourceText.AppendLine($"/// Property: {prop.Name} of type {prop.TypeFullName.Replace("global::", "")}");
                             sourceText.AppendLine($"/// </summary>");
-                            sourceText.AppendLine($"public {
-                                string.Join("",prop.Modifiers.Where(x => !x.ToFullString().Contains("public")).Select(x => x.ToFullString()))
-                            }{prop.Type.ToFullString().Trim()} {prop.Identifier.Text} {{ get; set; }}");
+                            sourceText.AppendLine($"public {prop.TypeFullName.Replace("global::", "")} {prop.Name} {{ get; set; }}");
                         }
                     }
                     sourceText.AppendLine();
@@ -185,23 +190,35 @@ public class MapperGenerator : IIncrementalGenerator {
                 sourceText.AppendLine("/// Mapping method generated by TenJames.CompMap");
                 sourceText.AppendLine("/// </summary>");
                 using var mapToBlock = sourceText.BeginBlock(
-                $"public {ma.TargetName} MapTo(IMapper mapper)"
+                $"public {ma.TargetFullName} MapTo(IMapper mapper)"
                 );
                 if (isMissing)
                 {
                     sourceText.AppendLine("var unmapped = Get" + ma.TargetName + "UnmappedProperties(mapper, this);");
                 }
-                sourceText.AppendLine($"var target = new {ma.TargetName}() {{");
+                sourceText.AppendLine($"var target = new {ma.TargetFullName}() {{");
                 sourceText.IncreaseIndent();
                 foreach (var prop in matchingFields)
                 {
-                    sourceText.AppendLine($" {prop.Identifier.Text} = this.{prop.Identifier.Text},");
+                    // Get the corresponding target property to check type
+                    var targetProp = allTargetProperties
+                        .FirstOrDefault(p => p.Name == prop.Name);
+
+                    if (targetProp != null && prop.TypeFullName != targetProp.TypeFullName)
+                    {
+                        // Type mismatch, use mapper
+                        sourceText.AppendLine($" {prop.Name} = mapper.Map<{targetProp.TypeFullName.Replace("global::", "")}>(this.{prop.Name}),");
+                    }
+                    else
+                    {
+                        sourceText.AppendLine($" {prop.Name} = this.{prop.Name},");
+                    }
                 }
                 if (isMissing)
                 {
                     foreach (var prop in missingFields)
                     {
-                        sourceText.AppendLine($" {prop.Identifier.Text} = unmapped.{prop.Identifier.Text},");
+                        sourceText.AppendLine($" {prop.Name} = unmapped.{prop.Name},");
                     }
                 }
                 sourceText.DecreaseIndent();
