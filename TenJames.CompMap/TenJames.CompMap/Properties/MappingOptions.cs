@@ -12,6 +12,8 @@ public class MappingOptions {
     public string Namespace { get; set; }
     public ClassDeclarationSyntax Target { get; set; }
     public string TargetName => Target.Identifier.Text;
+    public string TargetNamespace { get; set; }
+    public string TargetFullName => string.IsNullOrEmpty(TargetNamespace) ? TargetName : $"{TargetNamespace}.{TargetName}";
     
     
     public static MappingOptions? Create(
@@ -33,15 +35,28 @@ public class MappingOptions {
             var attributeName = attributeSyntax.Name.ToString();
             if (AttributeDefinitions.GetAllAttributes().Select(x => x.Name).Any(x => attributeName.Contains(x)))
             {
+                var targetClass = attributeSyntax.ArgumentList?.Arguments.First().Expression switch {
+                    TypeOfExpressionSyntax typeOfExpression => context.SemanticModel.GetSymbolInfo(typeOfExpression.Type).Symbol
+                        ?.DeclaringSyntaxReferences.First().GetSyntax() as ClassDeclarationSyntax,
+                    _ => null
+                } ?? throw new InvalidOperationException("Target type could not be determined.");
+
+                // Get target namespace
+                var targetNs = targetClass.FirstAncestorOrSelf<NamespaceDeclarationSyntax>();
+                var targetFileScoped = targetClass.FirstAncestorOrSelf<FileScopedNamespaceDeclarationSyntax>();
+
+                var targetNamespace = targetNs != null
+                    ? targetNs.Name.ToString()
+                    : targetFileScoped != null
+                        ? targetFileScoped.Name.ToString()
+                        : "GlobalNamespace";
+
                 return new MappingOptions {
                     ClassDeclarationSyntax = classDeclarationSyntax,
                     AttributeName = attributeName,
                     Namespace = namespaceName,
-                    Target = attributeSyntax.ArgumentList?.Arguments.First().Expression switch {
-                        TypeOfExpressionSyntax typeOfExpression => context.SemanticModel.GetSymbolInfo(typeOfExpression.Type).Symbol
-                            ?.DeclaringSyntaxReferences.First().GetSyntax() as ClassDeclarationSyntax,
-                        _ => null
-                    } ?? throw new InvalidOperationException("Target type could not be determined.")
+                    Target = targetClass,
+                    TargetNamespace = targetNamespace
                 };
             }
         }
