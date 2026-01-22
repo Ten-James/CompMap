@@ -74,3 +74,35 @@ public class Order
     public decimal TotalAmount { get; set; }
     public DateTime CreatedAt { get; set; }
 }
+
+/// <summary>
+/// Base entity class with common properties
+/// </summary>
+public abstract class BaseEntity
+{
+    public int Id { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+    public bool IsDeleted { get; set; }
+}
+
+/// <summary>
+/// Vehicle entity that inherits from BaseEntity
+/// </summary>
+public class Vehicle : BaseEntity
+{
+    public string Make { get; set; } = string.Empty;
+    public string Model { get; set; } = string.Empty;
+    public int Year { get; set; }
+    public string Color { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Base DTO class with common properties
+/// </summary>
+public abstract class BaseDto
+{
+    public int Id { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+}

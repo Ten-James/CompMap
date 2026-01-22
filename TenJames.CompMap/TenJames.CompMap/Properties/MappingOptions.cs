@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -14,8 +15,34 @@ public class MappingOptions {
     public string TargetName => Target.Identifier.Text;
     public string TargetNamespace { get; set; }
     public string TargetFullName => string.IsNullOrEmpty(TargetNamespace) ? TargetName : $"{TargetNamespace}.{TargetName}";
-    
-    
+    public SemanticModel SemanticModel { get; set; }
+
+    /// <summary>
+    /// Gets all properties including inherited ones from a class declaration
+    /// </summary>
+    public static List<PropertyInfo> GetAllProperties(SemanticModel semanticModel, ClassDeclarationSyntax classDecl)
+    {
+        var properties = new List<PropertyInfo>();
+        var symbol = semanticModel.GetDeclaredSymbol(classDecl) as INamedTypeSymbol;
+
+        if (symbol == null) return properties;
+
+        // Get all properties from the class hierarchy
+        var allMembers = symbol.GetMembers().OfType<IPropertySymbol>();
+
+        foreach (var prop in allMembers)
+        {
+            properties.Add(new PropertyInfo
+            {
+                Name = prop.Name,
+                TypeFullName = prop.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                PropertySymbol = prop
+            });
+        }
+
+        return properties;
+    }
+
     public static MappingOptions? Create(
         GeneratorSyntaxContext context,
         ClassDeclarationSyntax classDeclarationSyntax)
@@ -56,11 +83,19 @@ public class MappingOptions {
                     AttributeName = attributeName,
                     Namespace = namespaceName,
                     Target = targetClass,
-                    TargetNamespace = targetNamespace
+                    TargetNamespace = targetNamespace,
+                    SemanticModel = context.SemanticModel
                 };
             }
         }
 
         return null;
     }
+}
+
+public class PropertyInfo
+{
+    public string Name { get; set; } = string.Empty;
+    public string TypeFullName { get; set; } = string.Empty;
+    public IPropertySymbol PropertySymbol { get; set; } = null!;
 }

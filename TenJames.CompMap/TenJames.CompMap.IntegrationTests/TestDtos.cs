@@ -179,3 +179,37 @@ public partial class ProductCreateDto
         };
     }
 }
+
+/// <summary>
+/// DTO for Vehicle that inherits from BaseDto
+/// Tests that properties from base classes are properly mapped
+/// </summary>
+[MapFrom(typeof(Vehicle))]
+public partial class VehicleReadDto : BaseDto
+{
+    public string Make { get; set; } = string.Empty;
+    public string Model { get; set; } = string.Empty;
+    public int Year { get; set; }
+    public string Color { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// DTO for creating Vehicle that inherits from BaseDto
+/// Tests MapTo with inheritance
+/// </summary>
+[MapTo(typeof(Vehicle))]
+public partial class VehicleCreateDto : BaseDto
+{
+    public string Make { get; set; } = string.Empty;
+    public string Model { get; set; } = string.Empty;
+    public int Year { get; set; }
+    public string Color { get; set; } = string.Empty;
+
+    private static partial VehicleUnmappedProperties GetVehicleUnmappedProperties(IMapper mapper, VehicleCreateDto source)
+    {
+        return new VehicleUnmappedProperties
+        {
+            IsDeleted = false
+        };
+    }
+}
