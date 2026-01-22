@@ -449,7 +449,7 @@ public class MappingIntegrationTests
         };
 
         // Act
-        var vehicle = dto.MapTo(_mapper);
+        var vehicle = _mapper.Map<Vehicle>(dto);
 
         // Assert - Properties from base class BaseEntity
         Assert.Equal(dto.Id, vehicle.Id);

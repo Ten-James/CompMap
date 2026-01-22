@@ -27,17 +27,29 @@ public class MappingOptions {
 
         if (symbol == null) return properties;
 
-        // Get all properties from the class hierarchy
-        var allMembers = symbol.GetMembers().OfType<IPropertySymbol>();
-
-        foreach (var prop in allMembers)
+        // Walk up the inheritance chain to get all properties
+        var currentType = symbol;
+        while (currentType != null && currentType.SpecialType != SpecialType.System_Object)
         {
-            properties.Add(new PropertyInfo
+            // Get properties declared on this type
+            var typeProperties = currentType.GetMembers().OfType<IPropertySymbol>();
+
+            foreach (var prop in typeProperties)
             {
-                Name = prop.Name,
-                TypeFullName = prop.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
-                PropertySymbol = prop
-            });
+                // Avoid duplicates (overridden properties)
+                if (!properties.Any(p => p.Name == prop.Name))
+                {
+                    properties.Add(new PropertyInfo
+                    {
+                        Name = prop.Name,
+                        TypeFullName = prop.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                        PropertySymbol = prop
+                    });
+                }
+            }
+
+            // Move to base type
+            currentType = currentType.BaseType;
         }
 
         return properties;

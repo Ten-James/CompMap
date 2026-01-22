@@ -73,7 +73,10 @@ public class MapperGenerator : IIncrementalGenerator {
 
             // Get all properties including inherited ones
             var allSourceProperties = MappingOptions.GetAllProperties(ma.SemanticModel, ma.ClassDeclarationSyntax);
-            var allTargetProperties = MappingOptions.GetAllProperties(ma.SemanticModel, ma.Target);
+
+            // Get semantic model for target (which might be in a different file)
+            var targetSemanticModel = compilation.GetSemanticModel(ma.Target.SyntaxTree);
+            var allTargetProperties = MappingOptions.GetAllProperties(targetSemanticModel, ma.Target);
 
             var matchingFields = allSourceProperties
                 .Where(prop => allTargetProperties
@@ -99,14 +102,10 @@ public class MapperGenerator : IIncrementalGenerator {
                         using var block = sourceText.BeginBlock($"internal class {ma.TargetName}UnmappedProperties");
                         foreach (var prop in missingFields)
                         {
-                            var location = prop.PropertySymbol.Locations.FirstOrDefault();
-                            if (location != null && location.IsInSource)
-                            {
-                                var lineSpan = location.GetMappedLineSpan();
-                                sourceText.AppendLine($"/// <summary>");
-                                sourceText.AppendLine($"/// Found at {lineSpan.Path.Substring(lineSpan.Path.LastIndexOf('/') + 1)} at {lineSpan.StartLinePosition.Line + 1}");
-                                sourceText.AppendLine($"/// </summary>");
-                            }
+                            // Add property documentation
+                            sourceText.AppendLine($"/// <summary>");
+                            sourceText.AppendLine($"/// Property: {prop.Name} of type {prop.TypeFullName.Replace("global::", "")}");
+                            sourceText.AppendLine($"/// </summary>");
                             sourceText.AppendLine($"public {prop.TypeFullName.Replace("global::", "")} {prop.Name} {{ get; set; }}");
                         }
                     }
@@ -174,14 +173,10 @@ public class MapperGenerator : IIncrementalGenerator {
                         using var block = sourceText.BeginBlock($"internal class {ma.TargetName}UnmappedProperties");
                         foreach (var prop in missingFields)
                         {
-                            var location = prop.PropertySymbol.Locations.FirstOrDefault();
-                            if (location != null && location.IsInSource)
-                            {
-                                var lineSpan = location.GetMappedLineSpan();
-                                sourceText.AppendLine($"/// <summary>");
-                                sourceText.AppendLine($"/// Found at {lineSpan.Path.Substring(lineSpan.Path.LastIndexOf('/') + 1)} at {lineSpan.StartLinePosition.Line + 1}");
-                                sourceText.AppendLine($"/// </summary>");
-                            }
+                            // Add property documentation
+                            sourceText.AppendLine($"/// <summary>");
+                            sourceText.AppendLine($"/// Property: {prop.Name} of type {prop.TypeFullName.Replace("global::", "")}");
+                            sourceText.AppendLine($"/// </summary>");
                             sourceText.AppendLine($"public {prop.TypeFullName.Replace("global::", "")} {prop.Name} {{ get; set; }}");
                         }
                     }

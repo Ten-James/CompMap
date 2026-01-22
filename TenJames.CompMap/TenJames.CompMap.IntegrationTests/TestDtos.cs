@@ -129,6 +129,7 @@ public partial class UserReadDto
         };
     }
 
+
     private static string MaskEmail(string email)
     {
         if (string.IsNullOrEmpty(email)) return string.Empty;
@@ -212,4 +213,5 @@ public partial class VehicleCreateDto : BaseDto
             IsDeleted = false
         };
     }
+
 }
