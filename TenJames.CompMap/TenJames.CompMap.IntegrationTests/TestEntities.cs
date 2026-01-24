@@ -106,3 +106,38 @@ public abstract class BaseDto
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }
+
+/// <summary>
+/// Record entity representing a contact (for testing record support)
+/// </summary>
+public record Contact
+{
+    public int Id { get; init; }
+    public string FirstName { get; init; } = string.Empty;
+    public string LastName { get; init; } = string.Empty;
+    public string Email { get; init; } = string.Empty;
+    public string Phone { get; init; } = string.Empty;
+}
+
+/// <summary>
+/// Record entity representing an address
+/// </summary>
+public record Address
+{
+    public int Id { get; init; }
+    public string Street { get; init; } = string.Empty;
+    public string City { get; init; } = string.Empty;
+    public string PostalCode { get; init; } = string.Empty;
+    public string Country { get; init; } = string.Empty;
+}
+
+/// <summary>
+/// Record entity for testing MapTo direction
+/// </summary>
+public record Note
+{
+    public int Id { get; init; }
+    public string Title { get; init; } = string.Empty;
+    public string Content { get; init; } = string.Empty;
+    public DateTime CreatedAt { get; init; }
+}

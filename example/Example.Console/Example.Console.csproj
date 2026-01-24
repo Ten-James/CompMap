@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
@@ -8,6 +8,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\TenJames.CompMap\TenJames.CompMap.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
+        <ProjectReference Include="..\Example.Entities\Example.Entities.csproj" />
+        <ProjectReference Include="..\Example.DTOS\Example.DTOS.csproj" />
     </ItemGroup>
+
 </Project>
