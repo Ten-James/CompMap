@@ -7,13 +7,14 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 public class MappingOptions {
-    public ClassDeclarationSyntax ClassDeclarationSyntax { get; set; }
-    public string ClassName => ClassDeclarationSyntax.Identifier.Text;
+    public TypeDeclarationSyntax TypeDeclarationSyntax { get; set; }
+    public string ClassName => TypeDeclarationSyntax.Identifier.Text;
+    public bool IsRecord => TypeDeclarationSyntax is RecordDeclarationSyntax;
     public string AttributeName { get; set; }
     public string Namespace { get; set; }
 
     // Target can be either from source (same compilation) or from metadata (external assembly)
-    public ClassDeclarationSyntax? TargetSyntax { get; set; }
+    public TypeDeclarationSyntax? TargetSyntax { get; set; }
     public INamedTypeSymbol TargetSymbol { get; set; }
 
     public string TargetName => TargetSymbol.Name;
@@ -24,11 +25,11 @@ public class MappingOptions {
     public SemanticModel SemanticModel { get; set; }
 
     /// <summary>
-    /// Gets all properties including inherited ones from a class declaration (when source is available)
+    /// Gets all properties including inherited ones from a type declaration (when source is available)
     /// </summary>
-    public static List<PropertyInfo> GetAllProperties(SemanticModel semanticModel, ClassDeclarationSyntax classDecl)
+    public static List<PropertyInfo> GetAllProperties(SemanticModel semanticModel, TypeDeclarationSyntax typeDecl)
     {
-        var symbol = semanticModel.GetDeclaredSymbol(classDecl) as INamedTypeSymbol;
+        var symbol = semanticModel.GetDeclaredSymbol(typeDecl) as INamedTypeSymbol;
         return symbol == null ? new List<PropertyInfo>() : GetAllPropertiesFromSymbol(symbol);
     }
 
@@ -48,6 +49,10 @@ public class MappingOptions {
 
             foreach (var prop in typeProperties)
             {
+                // Skip EqualityContract property which is compiler-generated for records
+                if (prop.Name == "EqualityContract")
+                    continue;
+
                 // Avoid duplicates (overridden properties)
                 if (!properties.Any(p => p.Name == prop.Name))
                 {
@@ -69,10 +74,10 @@ public class MappingOptions {
 
     public static MappingOptions? Create(
         GeneratorSyntaxContext context,
-        ClassDeclarationSyntax classDeclarationSyntax)
+        TypeDeclarationSyntax typeDeclarationSyntax)
     {
-        var ns = classDeclarationSyntax.FirstAncestorOrSelf<NamespaceDeclarationSyntax>();
-        var fileScoped = classDeclarationSyntax.FirstAncestorOrSelf<FileScopedNamespaceDeclarationSyntax>();
+        var ns = typeDeclarationSyntax.FirstAncestorOrSelf<NamespaceDeclarationSyntax>();
+        var fileScoped = typeDeclarationSyntax.FirstAncestorOrSelf<FileScopedNamespaceDeclarationSyntax>();
 
         var namespaceName = ns != null
             ? ns.Name.ToString()
@@ -81,14 +86,14 @@ public class MappingOptions {
                 : "GlobalNamespace";
 
 
-        foreach (var attributeSyntax in classDeclarationSyntax.AttributeLists.SelectMany(attributeListSyntax => attributeListSyntax.Attributes))
+        foreach (var attributeSyntax in typeDeclarationSyntax.AttributeLists.SelectMany(attributeListSyntax => attributeListSyntax.Attributes))
         {
             var attributeName = attributeSyntax.Name.ToString();
             if (AttributeDefinitions.GetAllAttributes().Select(x => x.Name).Any(x => attributeName.Contains(x)))
             {
                 // Get the target type symbol
                 INamedTypeSymbol? targetSymbol = null;
-                ClassDeclarationSyntax? targetSyntax = null;
+                TypeDeclarationSyntax? targetSyntax = null;
 
                 if (attributeSyntax.ArgumentList?.Arguments.First().Expression is TypeOfExpressionSyntax typeOfExpression)
                 {
@@ -99,7 +104,7 @@ public class MappingOptions {
                     if (targetSymbol != null)
                     {
                         var syntaxRef = targetSymbol.DeclaringSyntaxReferences.FirstOrDefault();
-                        targetSyntax = syntaxRef?.GetSyntax() as ClassDeclarationSyntax;
+                        targetSyntax = syntaxRef?.GetSyntax() as TypeDeclarationSyntax;
                     }
                 }
 
@@ -114,7 +119,7 @@ public class MappingOptions {
                     : targetSymbol.ContainingNamespace.ToDisplayString();
 
                 return new MappingOptions {
-                    ClassDeclarationSyntax = classDeclarationSyntax,
+                    TypeDeclarationSyntax = typeDeclarationSyntax,
                     AttributeName = attributeName,
                     Namespace = namespaceName,
                     TargetSyntax = targetSyntax,

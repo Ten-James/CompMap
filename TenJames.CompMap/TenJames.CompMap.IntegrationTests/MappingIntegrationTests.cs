@@ -465,4 +465,96 @@ public class MappingIntegrationTests
         // Assert - Unmapped property
         Assert.False(vehicle.IsDeleted);
     }
+
+    [Fact]
+    public void ContactReadDto_MapFrom_ShouldMapRecordProperties()
+    {
+        // Arrange
+        var contact = new Contact
+        {
+            Id = 1,
+            FirstName = "Alice",
+            LastName = "Smith",
+            Email = "alice.smith@example.com",
+            Phone = "+1234567890"
+        };
+
+        // Act
+        var dto = ContactReadDto.MapFrom(_mapper, contact);
+
+        // Assert - Matching properties
+        Assert.Equal(contact.Id, dto.Id);
+        Assert.Equal(contact.FirstName, dto.FirstName);
+        Assert.Equal(contact.LastName, dto.LastName);
+        Assert.Equal(contact.Email, dto.Email);
+        Assert.Equal(contact.Phone, dto.Phone);
+
+        // Assert - Unmapped property (computed)
+        Assert.Equal("Alice Smith", dto.FullName);
+    }
+
+    [Fact]
+    public void AddressReadDto_MapFrom_ShouldMapAllRecordProperties()
+    {
+        // Arrange
+        var address = new Address
+        {
+            Id = 42,
+            Street = "123 Main St",
+            City = "New York",
+            PostalCode = "10001",
+            Country = "USA"
+        };
+
+        // Act
+        var dto = AddressReadDto.MapFrom(_mapper, address);
+
+        // Assert
+        Assert.Equal(address.Id, dto.Id);
+        Assert.Equal(address.Street, dto.Street);
+        Assert.Equal(address.City, dto.City);
+        Assert.Equal(address.PostalCode, dto.PostalCode);
+        Assert.Equal(address.Country, dto.Country);
+    }
+
+    [Fact]
+    public void NoteCreateDto_MapTo_ShouldCreateNoteRecord()
+    {
+        // Arrange
+        var dto = new NoteCreateDto
+        {
+            Title = "Meeting Notes",
+            Content = "Important discussion about Q1 goals"
+        };
+
+        // Act
+        var note = _mapper.Map<Note>(dto);
+
+        // Assert - Matching properties
+        Assert.Equal(dto.Title, note.Title);
+        Assert.Equal(dto.Content, note.Content);
+
+        // Assert - Unmapped properties (auto-generated)
+        Assert.Equal(0, note.Id);
+        Assert.NotEqual(default(DateTime), note.CreatedAt);
+    }
+
+    [Fact]
+    public void Record_MapFrom_ClassEntity_ShouldWork()
+    {
+        // This tests mapping from a class entity to a record DTO
+        var contact = new Contact
+        {
+            Id = 5,
+            FirstName = "Bob",
+            LastName = "Jones",
+            Email = "bob@example.com",
+            Phone = "+9876543210"
+        };
+
+        var dto = _mapper.Map<ContactReadDto>(contact);
+
+        Assert.Equal(contact.Id, dto.Id);
+        Assert.Equal("Bob Jones", dto.FullName);
+    }
 }

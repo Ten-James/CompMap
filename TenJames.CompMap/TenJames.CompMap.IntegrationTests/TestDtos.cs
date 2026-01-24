@@ -215,3 +215,60 @@ public partial class VehicleCreateDto : BaseDto
     }
 
 }
+
+/// <summary>
+/// Record DTO for reading contact data (testing MapFrom with records)
+/// Has 1 unmapped property: FullName
+/// </summary>
+[MapFrom(typeof(Contact))]
+public partial record ContactReadDto
+{
+    public int Id { get; init; }
+    public string FirstName { get; init; } = string.Empty;
+    public string LastName { get; init; } = string.Empty;
+    public string Email { get; init; } = string.Empty;
+    public string Phone { get; init; } = string.Empty;
+
+    // Unmapped property (computed)
+    public required string FullName { get; init; }
+
+    private static partial ContactUnmappedProperties GetContactUnmappedProperties(IMapper mapper, Contact source)
+    {
+        return new ContactUnmappedProperties
+        {
+            FullName = $"{source.FirstName} {source.LastName}"
+        };
+    }
+}
+
+/// <summary>
+/// Record DTO for reading address data (testing simple MapFrom with records, no unmapped properties)
+/// </summary>
+[MapFrom(typeof(Address))]
+public partial record AddressReadDto
+{
+    public int Id { get; init; }
+    public string Street { get; init; } = string.Empty;
+    public string City { get; init; } = string.Empty;
+    public string PostalCode { get; init; } = string.Empty;
+    public string Country { get; init; } = string.Empty;
+}
+
+/// <summary>
+/// Record DTO for creating notes (testing MapTo with records)
+/// </summary>
+[MapTo(typeof(Note))]
+public partial record NoteCreateDto
+{
+    public string Title { get; init; } = string.Empty;
+    public string Content { get; init; } = string.Empty;
+
+    private static partial NoteUnmappedProperties GetNoteUnmappedProperties(IMapper mapper, NoteCreateDto source)
+    {
+        return new NoteUnmappedProperties
+        {
+            Id = 0,
+            CreatedAt = DateTime.UtcNow
+        };
+    }
+}

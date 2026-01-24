@@ -192,7 +192,7 @@ public class AttributeGenerator: IIncrementalGenerator {
         src.AppendLine($"    /// <summary>");
         src.AppendLine($"    /// {attribute.Description}");
         src.AppendLine($"    /// </summary>");
-        src.AppendLine($"    [AttributeUsage(AttributeTargets.Class)]");
+        src.AppendLine($"    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]");
         src.AppendLine($"    public class {attribute.Name}Attribute (");
         foreach (var arg in attribute.Arguments)
         {

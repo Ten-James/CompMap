@@ -16,8 +16,8 @@ public class MapperGenerator : IIncrementalGenerator {
     {
         var provider = context.SyntaxProvider
             .CreateSyntaxProvider(
-            (s, _) => s is ClassDeclarationSyntax,
-            (ctx, _) => GetClassDeclarationForSourceGen(ctx))
+            (s, _) => s is ClassDeclarationSyntax or RecordDeclarationSyntax,
+            (ctx, _) => GetTypeDeclarationForSourceGen(ctx))
             .Where(t => t is not null);
 
         // Generate the source code.
@@ -25,13 +25,13 @@ public class MapperGenerator : IIncrementalGenerator {
         ((ctx, t) => GenerateCode(ctx, t.Left, t.Right!)));
     }
 
-    private static MappingOptions? GetClassDeclarationForSourceGen(
+    private static MappingOptions? GetTypeDeclarationForSourceGen(
         GeneratorSyntaxContext context)
     {
-        var classDeclarationSyntax = (ClassDeclarationSyntax)context.Node;
+        var typeDeclarationSyntax = (TypeDeclarationSyntax)context.Node;
 
-        // Go through all attributes of the class.
-        foreach (var attributeSyntax in classDeclarationSyntax.AttributeLists.SelectMany(attributeListSyntax => attributeListSyntax.Attributes))
+        // Go through all attributes of the type.
+        foreach (var attributeSyntax in typeDeclarationSyntax.AttributeLists.SelectMany(attributeListSyntax => attributeListSyntax.Attributes))
         {
             if (context.SemanticModel.GetSymbolInfo(attributeSyntax).Symbol is not IMethodSymbol attributeSymbol)
                 continue; // if we can't get the symbol, ignore it
@@ -39,7 +39,7 @@ public class MapperGenerator : IIncrementalGenerator {
             var attributeName = attributeSymbol.ContainingType.ToDisplayString();
 
             if (AttributeDefinitions.GetAllAttributes().Select(x => x.Name).Any(x => attributeName.Contains(x)))
-                return MappingOptions.Create(context, classDeclarationSyntax);
+                return MappingOptions.Create(context, typeDeclarationSyntax);
         }
 
         return null;
@@ -48,10 +48,11 @@ public class MapperGenerator : IIncrementalGenerator {
     private void GenerateCode(SourceProductionContext context, Compilation compilation,
         ImmutableArray<MappingOptions> mappingOptions)
     {
-        // generate partial classes with mapping methods
+        // generate partial classes/records with mapping methods
         foreach (var ma in mappingOptions)
         {
-            var className = ma.ClassDeclarationSyntax.Identifier.Text;
+            var className = ma.TypeDeclarationSyntax.Identifier.Text;
+            var typeKeyword = ma.IsRecord ? "record" : "class";
 
 
             var sourceText = new SourceBuilder();
@@ -66,12 +67,12 @@ public class MapperGenerator : IIncrementalGenerator {
             sourceText.AppendLine();
             sourceText.AppendLine($"namespace {ma.Namespace};");
             sourceText.AppendLine();
-            sourceText.AppendLine($"partial class {className}");
+            sourceText.AppendLine($"partial {typeKeyword} {className}");
             sourceText.AppendLine("{");
             sourceText.IncreaseIndent();
 
             // Get all properties including inherited ones
-            var allSourceProperties = MappingOptions.GetAllProperties(ma.SemanticModel, ma.ClassDeclarationSyntax);
+            var allSourceProperties = MappingOptions.GetAllProperties(ma.SemanticModel, ma.TypeDeclarationSyntax);
 
             // Get target properties from the symbol (works for both same-compilation and external assemblies)
             var allTargetProperties = MappingOptions.GetAllPropertiesFromSymbol(ma.TargetSymbol);
