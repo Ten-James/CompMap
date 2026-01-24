@@ -6,22 +6,31 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-public class MappingOptions {
+public class MappingOptions
+{
     public TypeDeclarationSyntax TypeDeclarationSyntax { get; set; }
+
     public string ClassName => TypeDeclarationSyntax.Identifier.Text;
+
     public bool IsRecord => TypeDeclarationSyntax is RecordDeclarationSyntax;
+
     public string AttributeName { get; set; }
+
     public string Namespace { get; set; }
 
     // Target can be either from source (same compilation) or from metadata (external assembly)
     public TypeDeclarationSyntax? TargetSyntax { get; set; }
+
     public INamedTypeSymbol TargetSymbol { get; set; }
 
     public string TargetName => TargetSymbol.Name;
+
     public string TargetNamespace { get; set; }
+
     public string TargetFullName => string.IsNullOrEmpty(TargetNamespace) || TargetNamespace == "GlobalNamespace"
         ? TargetName
         : $"{TargetNamespace}.{TargetName}";
+
     public SemanticModel SemanticModel { get; set; }
 
     /// <summary>
@@ -51,7 +60,9 @@ public class MappingOptions {
             {
                 // Skip EqualityContract property which is compiler-generated for records
                 if (prop.Name == "EqualityContract")
+                {
                     continue;
+                }
 
                 // Avoid duplicates (overridden properties)
                 if (!properties.Any(p => p.Name == prop.Name))
@@ -86,7 +97,8 @@ public class MappingOptions {
                 : "GlobalNamespace";
 
 
-        foreach (var attributeSyntax in typeDeclarationSyntax.AttributeLists.SelectMany(attributeListSyntax => attributeListSyntax.Attributes))
+        foreach (var attributeSyntax in typeDeclarationSyntax.AttributeLists.SelectMany(attributeListSyntax =>
+                     attributeListSyntax.Attributes))
         {
             var attributeName = attributeSyntax.Name.ToString();
             if (AttributeDefinitions.GetAllAttributes().Select(x => x.Name).Any(x => attributeName.Contains(x)))
@@ -95,7 +107,8 @@ public class MappingOptions {
                 INamedTypeSymbol? targetSymbol = null;
                 TypeDeclarationSyntax? targetSyntax = null;
 
-                if (attributeSyntax.ArgumentList?.Arguments.First().Expression is TypeOfExpressionSyntax typeOfExpression)
+                if (attributeSyntax.ArgumentList?.Arguments.First().Expression is TypeOfExpressionSyntax
+                    typeOfExpression)
                 {
                     var symbolInfo = context.SemanticModel.GetSymbolInfo(typeOfExpression.Type);
                     targetSymbol = symbolInfo.Symbol as INamedTypeSymbol;
@@ -118,7 +131,8 @@ public class MappingOptions {
                     ? "GlobalNamespace"
                     : targetSymbol.ContainingNamespace.ToDisplayString();
 
-                return new MappingOptions {
+                return new MappingOptions
+                {
                     TypeDeclarationSyntax = typeDeclarationSyntax,
                     AttributeName = attributeName,
                     Namespace = namespaceName,
@@ -137,6 +151,8 @@ public class MappingOptions {
 public class PropertyInfo
 {
     public string Name { get; set; } = string.Empty;
+
     public string TypeFullName { get; set; } = string.Empty;
+
     public IPropertySymbol PropertySymbol { get; set; } = null!;
 }

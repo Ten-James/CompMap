@@ -1,12 +1,13 @@
+namespace TenJames.CompMap;
+
 using System;
 using System.Text;
-
-namespace TenJames.CompMap;
 
 /// <summary>
 /// SourceBuilder
 /// </summary>
-public class SourceBuilder  {
+public class SourceBuilder
+{
     private readonly StringBuilder sourceText;
 
     /// <summary>
@@ -20,9 +21,10 @@ public class SourceBuilder  {
         sourceText.AppendLine("using System.Collections.Generic;");
         sourceText.AppendLine();
     }
+
     private int indentLevel = 0;
 
-    private string Indent => new string(' ', indentLevel * 4);
+    private string Indent => new(' ', indentLevel * 4);
 
     /// <summary>
     /// Appends the empty line
@@ -36,7 +38,7 @@ public class SourceBuilder  {
     public void AppendLine(string line)
     {
         sourceText.Append(Indent);
-        sourceText.AppendLine( line);
+        sourceText.AppendLine(line);
     }
 
     /// <summary>

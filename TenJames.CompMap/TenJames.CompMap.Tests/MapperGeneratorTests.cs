@@ -1,9 +1,11 @@
+namespace TenJames.CompMap.Tests;
+
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Xunit;
-
-namespace TenJames.CompMap.Tests;
 
 public class MapperGeneratorTests
 {
@@ -14,8 +16,8 @@ public class MapperGeneratorTests
         var attributeGenerator = new AttributeGenerator();
         var driver = CSharpGeneratorDriver.Create(attributeGenerator);
         var compilation = CSharpCompilation.Create(
-            nameof(AttributeGenerator_ShouldGenerateMapFromAttribute),
-            references: new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) }
+        nameof(AttributeGenerator_ShouldGenerateMapFromAttribute),
+        references: new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) }
         );
 
         // Act
@@ -23,7 +25,7 @@ public class MapperGeneratorTests
 
         // Assert
         var generatedAttribute = runResult.GeneratedTrees
-            .FirstOrDefault(t => t.FilePath.EndsWith("MapFromAttribute.g.cs", System.StringComparison.Ordinal));
+            .FirstOrDefault(t => t.FilePath.EndsWith("MapFromAttribute.g.cs", StringComparison.Ordinal));
 
         Assert.NotNull(generatedAttribute);
         var generatedCode = generatedAttribute.GetText().ToString();
@@ -38,8 +40,8 @@ public class MapperGeneratorTests
         var attributeGenerator = new AttributeGenerator();
         var driver = CSharpGeneratorDriver.Create(attributeGenerator);
         var compilation = CSharpCompilation.Create(
-            nameof(AttributeGenerator_ShouldGenerateMapToAttribute),
-            references: new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) }
+        nameof(AttributeGenerator_ShouldGenerateMapToAttribute),
+        references: new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) }
         );
 
         // Act
@@ -47,7 +49,7 @@ public class MapperGeneratorTests
 
         // Assert
         var generatedAttribute = runResult.GeneratedTrees
-            .FirstOrDefault(t => t.FilePath.EndsWith("MapToAttribute.g.cs", System.StringComparison.Ordinal));
+            .FirstOrDefault(t => t.FilePath.EndsWith("MapToAttribute.g.cs", StringComparison.Ordinal));
 
         Assert.NotNull(generatedAttribute);
         var generatedCode = generatedAttribute.GetText().ToString();
@@ -62,8 +64,8 @@ public class MapperGeneratorTests
         var attributeGenerator = new AttributeGenerator();
         var driver = CSharpGeneratorDriver.Create(attributeGenerator);
         var compilation = CSharpCompilation.Create(
-            nameof(AttributeGenerator_ShouldGenerateMapperInterface),
-            references: new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) }
+        nameof(AttributeGenerator_ShouldGenerateMapperInterface),
+        references: new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) }
         );
 
         // Act
@@ -71,7 +73,7 @@ public class MapperGeneratorTests
 
         // Assert
         var generatedMapper = runResult.GeneratedTrees
-            .FirstOrDefault(t => t.FilePath.EndsWith("Mapper.g.cs", System.StringComparison.Ordinal));
+            .FirstOrDefault(t => t.FilePath.EndsWith("Mapper.g.cs", StringComparison.Ordinal));
 
         Assert.NotNull(generatedMapper);
         var generatedCode = generatedMapper.GetText().ToString();
@@ -108,7 +110,9 @@ namespace TestNamespace
         var driver = CSharpGeneratorDriver.Create(generators);
 
         // Act
-        driver = (CSharpGeneratorDriver)driver.RunGeneratorsAndUpdateCompilation(compilation, out var outputCompilation, out var diagnostics);
+        driver = (CSharpGeneratorDriver)driver.RunGeneratorsAndUpdateCompilation(compilation,
+        out var outputCompilation,
+        out var diagnostics);
 
         // Assert
         // Check no errors occurred during generation
@@ -126,14 +130,14 @@ namespace TestNamespace
         var references = new[]
         {
             MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
-            MetadataReference.CreateFromFile(typeof(System.Collections.Generic.ICollection<>).Assembly.Location),
+            MetadataReference.CreateFromFile(typeof(ICollection<>).Assembly.Location)
         };
 
         return CSharpCompilation.Create(
-            "TestCompilation",
-            new[] { syntaxTree },
-            references,
-            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
+        "TestCompilation",
+        new[] { syntaxTree },
+        references,
+        new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
         );
     }
 }
