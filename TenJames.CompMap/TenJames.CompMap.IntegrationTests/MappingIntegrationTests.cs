@@ -1,19 +1,16 @@
+namespace TenJames.CompMap.IntegrationTests;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using TenJames.CompMap.Mappper;
+using Mappper;
 using Xunit;
-
-namespace TenJames.CompMap.IntegrationTests;
 
 public class MappingIntegrationTests
 {
     private readonly IMapper _mapper;
 
-    public MappingIntegrationTests()
-    {
-        _mapper = new BaseMapper();
-    }
+    public MappingIntegrationTests() => _mapper = new BaseMapper();
 
     [Fact]
     public void ProductReadDto_MapFrom_ShouldMapAllMatchingProperties()
@@ -28,8 +25,20 @@ public class MappingIntegrationTests
 
         var reviews = new List<Review>
         {
-            new() { Id = 1, Comment = "Great!", Rating = 5, CreatedAt = DateTime.Now },
-            new() { Id = 2, Comment = "Good", Rating = 4, CreatedAt = DateTime.Now }
+            new()
+            {
+                Id = 1,
+                Comment = "Great!",
+                Rating = 5,
+                CreatedAt = DateTime.Now
+            },
+            new()
+            {
+                Id = 2,
+                Comment = "Good",
+                Rating = 4,
+                CreatedAt = DateTime.Now
+            }
         };
 
         var product = new Product
@@ -88,7 +97,12 @@ public class MappingIntegrationTests
             IsActive = true,
             InternalNotes = "",
             ProductGuid = Guid.NewGuid(),
-            Category = new Category { Id = 1, Name = "Test", Description = "Test" },
+            Category = new Category
+            {
+                Id = 1,
+                Name = "Test",
+                Description = "Test"
+            },
             Reviews = new List<Review>()
         };
 
@@ -105,8 +119,20 @@ public class MappingIntegrationTests
         // Arrange
         var orders = new List<Order>
         {
-            new() { Id = 1, OrderNumber = "ORD-001", TotalAmount = 100m, CreatedAt = DateTime.Now },
-            new() { Id = 2, OrderNumber = "ORD-002", TotalAmount = 200m, CreatedAt = DateTime.Now }
+            new()
+            {
+                Id = 1,
+                OrderNumber = "ORD-001",
+                TotalAmount = 100m,
+                CreatedAt = DateTime.Now
+            },
+            new()
+            {
+                Id = 2,
+                OrderNumber = "ORD-002",
+                TotalAmount = 200m,
+                CreatedAt = DateTime.Now
+            }
         };
 
         var user = new User
@@ -143,7 +169,10 @@ public class MappingIntegrationTests
         // Assert - Unmapped properties (computed)
         Assert.Equal("John Doe", dto.FullName);
         var expectedAge = DateTime.Now.Year - 1990;
-        if (DateTime.Now < new DateTime(DateTime.Now.Year, 5, 15)) expectedAge--;
+        if (DateTime.Now < new DateTime(DateTime.Now.Year, 5, 15))
+        {
+            expectedAge--;
+        }
         Assert.Equal(expectedAge, dto.Age);
         Assert.True(dto.IsAdult);
         Assert.True(dto.MembershipDuration > 0);
@@ -252,8 +281,8 @@ public class MappingIntegrationTests
 
         // Assert - Unmapped properties (auto-generated)
         Assert.Equal(0, product.Id); // Default for new entity
-        Assert.NotEqual(default(DateTime), product.CreatedAt);
-        Assert.NotEqual(default(DateTime), product.UpdatedAt);
+        Assert.NotEqual(default, product.CreatedAt);
+        Assert.NotEqual(default, product.UpdatedAt);
         Assert.Equal(string.Empty, product.InternalNotes);
         Assert.NotEqual(Guid.Empty, product.ProductGuid);
         Assert.NotNull(product.Reviews);
@@ -266,8 +295,20 @@ public class MappingIntegrationTests
         // Arrange
         var reviews = new List<Review>
         {
-            new() { Id = 1, Comment = "Great!", Rating = 5, CreatedAt = DateTime.Now },
-            new() { Id = 2, Comment = "Good", Rating = 4, CreatedAt = DateTime.Now }
+            new()
+            {
+                Id = 1,
+                Comment = "Great!",
+                Rating = 5,
+                CreatedAt = DateTime.Now
+            },
+            new()
+            {
+                Id = 2,
+                Comment = "Good",
+                Rating = 4,
+                CreatedAt = DateTime.Now
+            }
         };
 
         var product = new Product
@@ -283,7 +324,12 @@ public class MappingIntegrationTests
             IsActive = true,
             InternalNotes = "",
             ProductGuid = Guid.NewGuid(),
-            Category = new Category { Id = 1, Name = "Test", Description = "Test" },
+            Category = new Category
+            {
+                Id = 1,
+                Name = "Test",
+                Description = "Test"
+            },
             Reviews = reviews
         };
 
@@ -386,7 +432,12 @@ public class MappingIntegrationTests
             IsActive = true,
             InternalNotes = "",
             ProductGuid = Guid.NewGuid(),
-            Category = new Category { Id = 1, Name = "Test", Description = "Test" },
+            Category = new Category
+            {
+                Id = 1,
+                Name = "Test",
+                Description = "Test"
+            },
             Reviews = new List<Review>()
         };
 
@@ -536,7 +587,7 @@ public class MappingIntegrationTests
 
         // Assert - Unmapped properties (auto-generated)
         Assert.Equal(0, note.Id);
-        Assert.NotEqual(default(DateTime), note.CreatedAt);
+        Assert.NotEqual(default, note.CreatedAt);
     }
 
     [Fact]
@@ -556,5 +607,80 @@ public class MappingIntegrationTests
 
         Assert.Equal(contact.Id, dto.Id);
         Assert.Equal("Bob Jones", dto.FullName);
+    }
+
+    [Fact]
+    public void AutoPropertyChain_MapFrom_ShouldFlattenNestedProperties()
+    {
+        // Arrange
+        var company = new Company
+        {
+            Id = 1,
+            Name = "Acme Corp",
+            Address = new CompanyAddress
+            {
+                Street = "123 Main St",
+                City = "New York",
+                PostalCode = "10001",
+                Country = new AddressCountry
+                {
+                    Name = "United States",
+                    Code = "US"
+                }
+            },
+            Contact = new ContactPerson
+            {
+                FirstName = "John",
+                LastName = "Doe",
+                Email = "john.doe@acme.com"
+            }
+        };
+
+        // Act
+        var dto = CompanyFlatDto.MapFrom(_mapper, company);
+
+        // Assert - Direct properties
+        Assert.Equal(company.Id, dto.Id);
+        Assert.Equal(company.Name, dto.Name);
+
+        // Assert - Auto-mapped property chains (1 level deep)
+        Assert.Equal(company.Address.City, dto.AddressCity);
+        Assert.Equal(company.Address.Street, dto.AddressStreet);
+        Assert.Equal(company.Address.PostalCode, dto.AddressPostalCode);
+        Assert.Equal(company.Contact.FirstName, dto.ContactFirstName);
+        Assert.Equal(company.Contact.Email, dto.ContactEmail);
+
+        // Assert - Deeply nested property chains (2 levels deep)
+        Assert.Equal(company.Address.Country.Name, dto.AddressCountryName);
+        Assert.Equal(company.Address.Country.Code, dto.AddressCountryCode);
+    }
+
+    [Fact]
+    public void AutoPropertyChain_MapTo_ShouldUnflattenNestedProperties()
+    {
+        // Arrange
+        var dto = new CompanyWithNestedDto
+        {
+            Id = 2,
+            Name = "Beta Inc",
+            Address = new NestedAddress
+            {
+                City = "Los Angeles",
+                Street = "456 Oak Ave"
+            },
+            Contact = new NestedContact { Email = "info@beta.com" }
+        };
+
+        // Act
+        var flatCompany = dto.MapTo(_mapper);
+
+        // Assert - Direct properties
+        Assert.Equal(dto.Id, flatCompany.Id);
+        Assert.Equal(dto.Name, flatCompany.Name);
+
+        // Assert - Auto-mapped property chains (flattened from nested)
+        Assert.Equal(dto.Address.City, flatCompany.AddressCity);
+        Assert.Equal(dto.Address.Street, flatCompany.AddressStreet);
+        Assert.Equal(dto.Contact.Email, flatCompany.ContactEmail);
     }
 }

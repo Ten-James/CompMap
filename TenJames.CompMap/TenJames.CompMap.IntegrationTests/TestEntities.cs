@@ -1,7 +1,7 @@
+namespace TenJames.CompMap.IntegrationTests;
+
 using System;
 using System.Collections.Generic;
-
-namespace TenJames.CompMap.IntegrationTests;
 
 /// <summary>
 /// Entity class representing a product in the database
@@ -9,17 +9,29 @@ namespace TenJames.CompMap.IntegrationTests;
 public class Product
 {
     public int Id { get; set; }
+
     public string Name { get; set; } = string.Empty;
+
     public string Description { get; set; } = string.Empty;
+
     public decimal Price { get; set; }
+
     public int StockQuantity { get; set; }
+
     public string Sku { get; set; } = string.Empty;
+
     public DateTime CreatedAt { get; set; }
+
     public DateTime UpdatedAt { get; set; }
+
     public bool IsActive { get; set; }
+
     public string InternalNotes { get; set; } = string.Empty;
+
     public Guid ProductGuid { get; set; }
+
     public Category Category { get; set; } = null!;
+
     public ICollection<Review> Reviews { get; set; } = new List<Review>();
 }
 
@@ -29,7 +41,9 @@ public class Product
 public class Category
 {
     public int Id { get; set; }
+
     public string Name { get; set; } = string.Empty;
+
     public string Description { get; set; } = string.Empty;
 }
 
@@ -39,8 +53,11 @@ public class Category
 public class Review
 {
     public int Id { get; set; }
+
     public string Comment { get; set; } = string.Empty;
+
     public int Rating { get; set; }
+
     public DateTime CreatedAt { get; set; }
 }
 
@@ -50,17 +67,29 @@ public class Review
 public class User
 {
     public int Id { get; set; }
+
     public string Username { get; set; } = string.Empty;
+
     public string Email { get; set; } = string.Empty;
+
     public string FirstName { get; set; } = string.Empty;
+
     public string LastName { get; set; } = string.Empty;
+
     public DateTime DateOfBirth { get; set; }
+
     public string PhoneNumber { get; set; } = string.Empty;
+
     public string Address { get; set; } = string.Empty;
+
     public DateTime CreatedAt { get; set; }
+
     public DateTime LastLoginAt { get; set; }
+
     public bool IsEmailVerified { get; set; }
+
     public string PasswordHash { get; set; } = string.Empty;
+
     public ICollection<Order> Orders { get; set; } = new List<Order>();
 }
 
@@ -70,8 +99,11 @@ public class User
 public class Order
 {
     public int Id { get; set; }
+
     public string OrderNumber { get; set; } = string.Empty;
+
     public decimal TotalAmount { get; set; }
+
     public DateTime CreatedAt { get; set; }
 }
 
@@ -81,8 +113,11 @@ public class Order
 public abstract class BaseEntity
 {
     public int Id { get; set; }
+
     public DateTime CreatedAt { get; set; }
+
     public DateTime UpdatedAt { get; set; }
+
     public bool IsDeleted { get; set; }
 }
 
@@ -92,8 +127,11 @@ public abstract class BaseEntity
 public class Vehicle : BaseEntity
 {
     public string Make { get; set; } = string.Empty;
+
     public string Model { get; set; } = string.Empty;
+
     public int Year { get; set; }
+
     public string Color { get; set; } = string.Empty;
 }
 
@@ -103,7 +141,9 @@ public class Vehicle : BaseEntity
 public abstract class BaseDto
 {
     public int Id { get; set; }
+
     public DateTime CreatedAt { get; set; }
+
     public DateTime UpdatedAt { get; set; }
 }
 
@@ -113,9 +153,13 @@ public abstract class BaseDto
 public record Contact
 {
     public int Id { get; init; }
+
     public string FirstName { get; init; } = string.Empty;
+
     public string LastName { get; init; } = string.Empty;
+
     public string Email { get; init; } = string.Empty;
+
     public string Phone { get; init; } = string.Empty;
 }
 
@@ -125,9 +169,13 @@ public record Contact
 public record Address
 {
     public int Id { get; init; }
+
     public string Street { get; init; } = string.Empty;
+
     public string City { get; init; } = string.Empty;
+
     public string PostalCode { get; init; } = string.Empty;
+
     public string Country { get; init; } = string.Empty;
 }
 
@@ -137,7 +185,76 @@ public record Address
 public record Note
 {
     public int Id { get; init; }
+
     public string Title { get; init; } = string.Empty;
+
     public string Content { get; init; } = string.Empty;
+
     public DateTime CreatedAt { get; init; }
+}
+
+/// <summary>
+/// Entity for testing AutoPropertyChain - has nested objects
+/// </summary>
+public class Company
+{
+    public int Id { get; set; }
+
+    public string Name { get; set; } = string.Empty;
+
+    public CompanyAddress Address { get; set; } = null!;
+
+    public ContactPerson Contact { get; set; } = null!;
+}
+
+/// <summary>
+/// Nested address for Company
+/// </summary>
+public class CompanyAddress
+{
+    public string Street { get; set; } = string.Empty;
+
+    public string City { get; set; } = string.Empty;
+
+    public string PostalCode { get; set; } = string.Empty;
+
+    public AddressCountry Country { get; set; } = null!;
+}
+
+/// <summary>
+/// Deeply nested country for testing recursive property chain
+/// </summary>
+public class AddressCountry
+{
+    public string Name { get; set; } = string.Empty;
+
+    public string Code { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Nested contact person for Company
+/// </summary>
+public class ContactPerson
+{
+    public string FirstName { get; set; } = string.Empty;
+
+    public string LastName { get; set; } = string.Empty;
+
+    public string Email { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Flat entity for testing MapTo with AutoPropertyChain
+/// </summary>
+public class FlatCompany
+{
+    public int Id { get; set; }
+
+    public string Name { get; set; } = string.Empty;
+
+    public string AddressCity { get; set; } = string.Empty;
+
+    public string AddressStreet { get; set; } = string.Empty;
+
+    public string ContactEmail { get; set; } = string.Empty;
 }

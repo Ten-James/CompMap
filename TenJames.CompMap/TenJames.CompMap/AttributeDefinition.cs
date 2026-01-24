@@ -1,25 +1,62 @@
-using System;
-using System.Collections.Generic;
-
 namespace TenJames.CompMap;
 
-public class AttributeDefinition {
+using System.Collections.Generic;
+
+/// <summary>
+/// Information about a mapping attribute.
+/// </summary>
+public class AttributeDefinition
+{
+    /// <summary>
+    /// Name of the attribute.
+    /// </summary>
     public string Name { get; set; }
+
+    /// <summary>
+    /// Description of the attribute.
+    /// </summary>
     public string Description { get; set; }
+
+    /// <summary>
+    /// Arguments for the attribute.
+    /// </summary>
     public IList<ArgumentDefinition> Arguments { get; set; }
 }
-public class ArgumentDefinition {
+
+/// <summary>
+/// Information about an argument for a mapping attribute.
+/// </summary>
+public class ArgumentDefinition
+{
+    /// <summary>
+    /// Name of the argument.
+    /// </summary>
     public string Name { get; set; }
+
+    /// <summary>
+    /// Type of the argument.
+    /// </summary>
     public string Type { get; set; }
+
+    /// <summary>
+    /// Default value or description of the argument.
+    /// </summary>
     public string Value { get; set; }
 }
 
-public static class AttributeDefinitions {
-    public readonly static AttributeDefinition MapFrom = new AttributeDefinition {
+/// <summary>
+/// Static class containing predefined attribute definitions.
+/// </summary>
+public static class AttributeDefinitions
+{
+    private static readonly AttributeDefinition MapFrom = new()
+    {
         Name = "MapFrom",
         Description = "Indicates that the decorated class can be mapped from the specified source type.",
-        Arguments = new List<ArgumentDefinition> {
-            new ArgumentDefinition {
+        Arguments = new List<ArgumentDefinition>
+        {
+            new()
+            {
                 Name = "sourceType",
                 Type = "Type",
                 Value = "The source type to map from."
@@ -27,11 +64,15 @@ public static class AttributeDefinitions {
         }
     };
 
-    public readonly static AttributeDefinition MapTo = new AttributeDefinition {
+
+    private static readonly AttributeDefinition MapTo = new()
+    {
         Name = "MapTo",
         Description = "Indicates that the decorated class can be mapped to the specified destination type.",
-        Arguments = new List<ArgumentDefinition> {
-            new ArgumentDefinition {
+        Arguments = new List<ArgumentDefinition>
+        {
+            new()
+            {
                 Name = "destinationType",
                 Type = "Type",
                 Value = "The destination type to map to."
@@ -39,9 +80,30 @@ public static class AttributeDefinitions {
         }
     };
 
+    private static readonly AttributeDefinition AutoPropertyChain = new()
+    {
+        Name = "AutoPropertyChain",
+        Description =
+            "Enables automatic property chain mapping. Maps flattened properties like CategoryName to nested properties like Category.Name.",
+        Arguments = new List<ArgumentDefinition>()
+    };
+
+    /// <summary>
+    /// Retrieves all mapping attributes.
+    /// </summary>
+    /// <returns></returns>
     public static IEnumerable<AttributeDefinition> GetAllAttributes()
     {
         yield return MapFrom;
         yield return MapTo;
+    }
+
+    /// <summary>
+    /// Retrieves all modifier attributes.
+    /// </summary>
+    /// <returns></returns>
+    public static IEnumerable<AttributeDefinition> GetAllModifierAttributes()
+    {
+        yield return AutoPropertyChain;
     }
 }

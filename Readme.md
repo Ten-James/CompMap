@@ -1,6 +1,7 @@
 # CompileMapper (TenJames.CompMap)
 
-> CompMap is a C# Roslyn-based source generator that automatically creates mapping methods between classes or records. It simplifies the process of converting one class type to another by generating the necessary code at compile time.
+> CompMap is a C# Roslyn-based source generator that automatically creates mapping methods between classes or records.
+> It simplifies the process of converting one class type to another by generating the necessary code at compile time.
 
 Ensure your DTO's are correctly mapped with compile time safety, to ensure valid changes are tracked in your project.
 
@@ -53,7 +54,6 @@ partial class UserReadDto
 
 Which can be generated simply from:
 
-
 ```csharp
 using TenJames.CompMap.Attributes;
 
@@ -97,7 +97,8 @@ Install the **TenJames.CompMap** package via NuGet:
 dotnet add package TenJames.CompMap
 ```
 
-The package will automatically be configured as a source generator. If you need to reference it manually in your project file:
+The package will automatically be configured as a source generator. If you need to reference it manually in your project
+file:
 
 ```xml
 <PackageReference
@@ -108,7 +109,8 @@ The package will automatically be configured as a source generator. If you need 
 />
 ```
 
-Note: The `OutputItemType="Analyzer"` and `ReferenceOutputAssembly="false"` attributes are typically not required when using `dotnet add package`. 
+Note: The `OutputItemType="Analyzer"` and `ReferenceOutputAssembly="false"` attributes are typically not required when
+using `dotnet add package`.
 
 ### Component registration
 
@@ -132,9 +134,7 @@ Add Attributes to your DTO classes and then enjoy the generated mapping methods 
 
 ## Example
 
-
 See the [Example](./example/Example.Console) project for a complete working example.
-
 
 ## Contributing
 
