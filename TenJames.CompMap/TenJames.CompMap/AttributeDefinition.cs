@@ -5,7 +5,7 @@ using System.Collections.Generic;
 /// <summary>
 /// Information about a mapping attribute.
 /// </summary>
-public class AttributeDefinition
+internal class AttributeDefinition
 {
     /// <summary>
     /// Name of the attribute.
@@ -26,7 +26,7 @@ public class AttributeDefinition
 /// <summary>
 /// Information about an argument for a mapping attribute.
 /// </summary>
-public class ArgumentDefinition
+internal class ArgumentDefinition
 {
     /// <summary>
     /// Name of the argument.
@@ -47,7 +47,7 @@ public class ArgumentDefinition
 /// <summary>
 /// Static class containing predefined attribute definitions.
 /// </summary>
-public static class AttributeDefinitions
+internal static class AttributeDefinitions
 {
     private static readonly AttributeDefinition MapFrom = new()
     {

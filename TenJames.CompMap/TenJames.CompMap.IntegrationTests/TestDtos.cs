@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Attributes;
-using Mappper;
+using Mapper;
 
 /// <summary>
 /// DTO for reading product data

@@ -2,7 +2,7 @@ namespace Example.DTOS;
 
 using Entities;
 using TenJames.CompMap.Attributes;
-using TenJames.CompMap.Mappper;
+using TenJames.CompMap.Mapper;
 
 /// <summary>
 /// DTO for reading user data - maps FROM the User entity

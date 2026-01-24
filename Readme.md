@@ -105,7 +105,6 @@ file:
     Include="TenJames.CompMap"
     Version="latest_version"
     OutputItemType="Analyzer"
-    ReferenceOutputAssembly="false"
 />
 ```
 
