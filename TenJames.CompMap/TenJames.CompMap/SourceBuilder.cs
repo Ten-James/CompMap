@@ -6,7 +6,7 @@ using System.Text;
 /// <summary>
 /// SourceBuilder
 /// </summary>
-public class SourceBuilder
+internal class SourceBuilder
 {
     private readonly StringBuilder sourceText;
 

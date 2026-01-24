@@ -6,7 +6,7 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-public class MappingOptions
+internal class MappingOptions
 {
     public TypeDeclarationSyntax TypeDeclarationSyntax { get; set; }
 

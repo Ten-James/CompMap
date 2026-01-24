@@ -1,7 +1,7 @@
 using System.Text.Json;
 using Example.DTOS;
 using Example.Entities;
-using TenJames.CompMap.Mappper;
+using TenJames.CompMap.Mapper;
 
 var mapper = new BaseMapper();
 var jsonOptions = new JsonSerializerOptions { WriteIndented = true };
@@ -31,7 +31,7 @@ var userDto = mapper.Map<UserReadDto>(user);
 Console.WriteLine("\n2. UserReadDto (from Example.DTOS assembly):");
 Console.WriteLine(JsonSerializer.Serialize(userDto, jsonOptions));
 
-Console.WriteLine("\n=== Cross-assembly mapping works! ===");
+Console.WriteLine("\n=== mapping works! ===");
 Console.WriteLine("- Models are defined in Example.Entities assembly");
 Console.WriteLine("- DTOs with [MapFrom] are defined in Example.DTOS assembly");
 Console.WriteLine("- Source generator correctly generates mappings across assembly boundaries");

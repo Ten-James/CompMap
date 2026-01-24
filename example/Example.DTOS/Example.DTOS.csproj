@@ -10,7 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Example.Entities\Example.Entities.csproj"/>
-    <ProjectReference Include="..\..\TenJames.CompMap\TenJames.CompMap\TenJames.CompMap.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer"/>
+    <ProjectReference Include="..\..\TenJames.CompMap\TenJames.CompMap\TenJames.CompMap.csproj"  OutputItemType="Analyzer"/>
   </ItemGroup>
 
 </Project>

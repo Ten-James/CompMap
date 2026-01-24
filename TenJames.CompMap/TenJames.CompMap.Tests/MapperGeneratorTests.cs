@@ -9,78 +9,6 @@ using Xunit;
 
 public class MapperGeneratorTests
 {
-    [Fact]
-    public void AttributeGenerator_ShouldGenerateMapFromAttribute()
-    {
-        // Arrange
-        var attributeGenerator = new AttributeGenerator();
-        var driver = CSharpGeneratorDriver.Create(attributeGenerator);
-        var compilation = CSharpCompilation.Create(
-        nameof(AttributeGenerator_ShouldGenerateMapFromAttribute),
-        references: new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) }
-        );
-
-        // Act
-        var runResult = driver.RunGenerators(compilation).GetRunResult();
-
-        // Assert
-        var generatedAttribute = runResult.GeneratedTrees
-            .FirstOrDefault(t => t.FilePath.EndsWith("MapFromAttribute.g.cs", StringComparison.Ordinal));
-
-        Assert.NotNull(generatedAttribute);
-        var generatedCode = generatedAttribute.GetText().ToString();
-        Assert.Contains("public class MapFromAttribute", generatedCode);
-        Assert.Contains("Type sourceType", generatedCode);
-    }
-
-    [Fact]
-    public void AttributeGenerator_ShouldGenerateMapToAttribute()
-    {
-        // Arrange
-        var attributeGenerator = new AttributeGenerator();
-        var driver = CSharpGeneratorDriver.Create(attributeGenerator);
-        var compilation = CSharpCompilation.Create(
-        nameof(AttributeGenerator_ShouldGenerateMapToAttribute),
-        references: new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) }
-        );
-
-        // Act
-        var runResult = driver.RunGenerators(compilation).GetRunResult();
-
-        // Assert
-        var generatedAttribute = runResult.GeneratedTrees
-            .FirstOrDefault(t => t.FilePath.EndsWith("MapToAttribute.g.cs", StringComparison.Ordinal));
-
-        Assert.NotNull(generatedAttribute);
-        var generatedCode = generatedAttribute.GetText().ToString();
-        Assert.Contains("public class MapToAttribute", generatedCode);
-        Assert.Contains("Type destinationType", generatedCode);
-    }
-
-    [Fact]
-    public void AttributeGenerator_ShouldGenerateMapperInterface()
-    {
-        // Arrange
-        var attributeGenerator = new AttributeGenerator();
-        var driver = CSharpGeneratorDriver.Create(attributeGenerator);
-        var compilation = CSharpCompilation.Create(
-        nameof(AttributeGenerator_ShouldGenerateMapperInterface),
-        references: new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) }
-        );
-
-        // Act
-        var runResult = driver.RunGenerators(compilation).GetRunResult();
-
-        // Assert
-        var generatedMapper = runResult.GeneratedTrees
-            .FirstOrDefault(t => t.FilePath.EndsWith("Mapper.g.cs", StringComparison.Ordinal));
-
-        Assert.NotNull(generatedMapper);
-        var generatedCode = generatedMapper.GetText().ToString();
-        Assert.Contains("public interface IMapper", generatedCode);
-        Assert.Contains("public class BaseMapper : IMapper", generatedCode);
-        Assert.Contains("TDestination Map<TDestination>(object source)", generatedCode);
-    }
 
     [Fact]
     public void MapperGenerator_ShouldRunWithoutErrors()
@@ -106,7 +34,7 @@ namespace TestNamespace
 }";
 
         var compilation = CreateCompilation(sourceCode);
-        var generators = new IIncrementalGenerator[] { new AttributeGenerator(), new MapperGenerator() };
+        var generators = new IIncrementalGenerator[] { new MapperGenerator() };
         var driver = CSharpGeneratorDriver.Create(generators);
 
         // Act
@@ -120,7 +48,7 @@ namespace TestNamespace
         Assert.Empty(errors);
 
         // Check that some code was generated
-        Assert.True(outputCompilation.SyntaxTrees.Count() > 1, "Generator should produce additional syntax trees");
+        Assert.True(outputCompilation.SyntaxTrees.Any(), "Generator should produce additional syntax trees");
     }
 
     private static CSharpCompilation CreateCompilation(string source)

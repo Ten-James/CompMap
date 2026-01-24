@@ -21,7 +21,7 @@
   <ItemGroup>
     <ProjectReference Include="..\TenJames.CompMap\TenJames.CompMap.csproj"
                       OutputItemType="Analyzer"
-                      ReferenceOutputAssembly="false"/>
+                      />
   </ItemGroup>
 
 </Project>

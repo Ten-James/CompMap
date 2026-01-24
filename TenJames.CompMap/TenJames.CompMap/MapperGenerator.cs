@@ -13,7 +13,7 @@ using Microsoft.CodeAnalysis.Text;
 /// Mapper generator that creates mapping methods based on attributes
 /// </summary>
 [Generator]
-public class MapperGenerator : IIncrementalGenerator
+internal class MapperGenerator : IIncrementalGenerator
 {
 
     /// <inheritdoc />
