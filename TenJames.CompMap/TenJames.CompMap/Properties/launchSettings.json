@@ -3,7 +3,7 @@
   "profiles": {
     "DebugRoslynSourceGenerator": {
       "commandName": "DebugRoslynComponent",
-      "targetProject": "../../TenJames.CompMap.Example/TenJames.CompMap.Example.csproj"
+      "targetProject": "../TenJames.CompMap.Example/TenJames.CompMap.Example.csproj"
     }
   }
 }
