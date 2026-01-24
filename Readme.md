@@ -11,7 +11,7 @@ Ensure your DTO's are correctly mapped with compile time safety, to ensure valid
 using System;
 using System.Collections.Generic;
 
-using TenJames.CompMap.Mappper;
+using TenJames.CompMap.Mapper;
 
 namespace TenJames.CompMap.Example;
 
